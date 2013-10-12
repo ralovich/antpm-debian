@@ -1,0 +1,260 @@
+antpm (1.11-1) UNRELEASED; urgency=low
+
+  [ Jordan Miller ]
+  * First Import
+  * Added Wali's Change to gant.c
+  * Syncing to ant0_t3
+  * Added some typecasting in the debug statements to get gant.c and antlib.c to compile
+  * Adding rapiddescent's recommendation to change output filename so it sorts properly
+  * Adding Wali's 20090124 patch.
+  * Adding Wali's changes
+  * Adding Chris Turchin's Python Monitor
+  * Removed generated files
+
+  [ Klaus Ethgen ]
+  * Removed needless files
+  * Cleanup the code
+  * Rewrite the XML part
+  * Handle more events
+  * Cleanup and better debug handling
+  * Complete redesign of garmin protocol
+  * Update version information
+  * Indent the file proper
+  * Implementing better debugging output
+  * Hmpf, one more unneeded file
+
+  [ Ilya Barygin ]
+  * Place needed libraries in a correct variable
+
+  [ Klaus Ethgen ]
+  * Ignore error on clean
+
+  [ Ralf Treinen ]
+  * Imported Upstream version 20110626
+
+  [ RALOVICH, Kristóf ]
+  * write copyright file
+  * ignore misc files
+  * include release version in getVersionString()
+  * gentoo build scripts from root@proscript.ru
+  * docs: update user's guide
+  * fix build due to missing include
+  * make sure we expect this exception
+  * common: add folderExists()
+  * AntFr310XT: not a problem if download folder name is already computed
+  * AntFr310XT: relax the check when creating download folde
+  * fix typo
+  * fix an other typo
+  * fix getVersionString() under MSVC
+  * bugfix: avoid infinite recursion
+  * log: include the version string in the header of the log file
+  * msvc build fixes
+  * fix for undefined 64-bit abs() under msvc
+  * FIT: fix build under gcc 4.4.5
+  * add todo
+  * testing: import travis description
+  * testing: refine build dependencies for travis
+  * docs: note on Travis Continous Integration support
+  * testing: add and run unit tests from cmake
+  * testing: make sure tests are actually run
+  * testing: add more tests
+  * scripts: update udev rules
+  * debian: silence lintian hardening warning
+  * debian: make a copy of the changelog
+  * show that this is a development version
+  * usb: sometimes the device is 0x0fcf, 0x1008
+  * tty: do some device auto-detection under linux
+  * fix build with clang
+  * write man pages for all executables
+  * DeviceSettings: allow passing in std::string too
+  * bugfix: save config.ini after downloads are done
+  * misc: add note
+  * update notes
+  * cmake: fix linking with clang version 3.4 (trunk 181662)
+  * cmake: let antpm depend on the VERSION too
+  * update notes
+  * cmake: include gant in the build process
+  * travis: build the gant-integration branch too
+  * gant: write man page
+  * gant: fix a build warning
+  * gant: fix a bunch of build warnings
+  * gant: more build warning fixes
+  * various fixes for packaging problems
+  * update packaging information
+  * travis: libxml2-dev is also needed
+
+ -- RALOVICH, Kristóf <tade60@freemail.hu>  Sat, 12 Oct 2013 01:32:08 +0200
+
+antpm (1.9-1) UNRELEASED; urgency=low
+
+  [ RALOVICH, Kristóf ]
+  * docs: update todo list
+  * cleanup
+  * antpm-fit2gpx: sort file names
+  * Log: mention build info in logs
+  * allow saving/loading per-device settings
+  * tests: DeviceSettings testing
+  * remove unused code
+  * more research on GARMIN_EPOCH
+  * cleanup
+  * FIT: sort directory based on date
+  * docs: add todo
+  * AntFr310XT: bugfix: improve stopAsync()
+  * improve comments
+  * deb: properly hook-up udev rule installation
+  * fix build with gcc 4.7
+  * getVersionString()
+  * remove a bunch of warnings
+  * remove a bunch of warnings
+  * DeviceSettings: comment the code
+  * DeviceSettings: bugfix: don't count daylight saving here
+  * tests: remove unused code
+  * these parts were outside of the namespace, fix it
+  * Log: add missing header
+  * Log: set verbosity to maximum
+  * FIT: rework timestamp retrieval
+  * tests: test-case for FIT date-time handling
+  * antpm-fit2gpx: many additions
+  * fix typo in pervious commit
+  * fix an other build fallout
+  * fix typo
+  * fix typo 2
+  * fix types
+  * require at least boost 1.41
+  * antpm-downloader: run-time log level, version info
+  * AntMessage: don't create the protocol log if not necessary
+  * preparing for new release
+
+ -- RALOVICH, Kristóf <tade60@freemail.hu>  Tue, 09 Jul 2013 19:05:03 +0200
+
+antpm (1.8-1) UNRELEASED; urgency=low
+
+  * GarminConvert: add a method that offsets the timestamps
+  * AntMessage: bugfix: correctly convert file creation time
+
+ -- RALOVICH, Kristóf <tade60@freemail.hu>  Sat, 06 Jul 2013 00:46:18 +0200
+
+antpm (1.7-1) UNRELEASED; urgency=low
+
+  * antpm-*: recongize -h option for --help too
+  * fit: this is a run-time warning
+  * docs: start writing user's guide
+  * docs: how to submit a bug report
+  * docs: add a note on installing the udev rule for user access to the
+    USB2ANT stick
+  * docs: refine udev procedure
+  * docs: split maintainer documentation from end-user documentation
+  * FIT: bugfix: don't offset timestamps twice
+  * bugfix: this was a crippling bug
+  * docs: add todo
+  * new version
+
+ -- RALOVICH, Kristóf <tade60@freemail.hu>  Sat, 06 Jul 2013 00:11:34 +0200
+
+antpm (1.6-3) UNRELEASED; urgency=low
+
+  [ RALOVICH, Kristóf ]
+  * docs: more notes
+  * this change was only necessary for win64
+  * debian: refine c++ compiler dependency
+  * serial: add more verbosity to output
+
+  [ Ralovich Kristof ]
+
+ -- Ralovich Kristof <tade@cg.iit.bme.hu>  Wed, 26 Jun 2013 11:43:35 +0200
+
+antpm (1.6-2) UNRELEASED; urgency=low
+
+  [ Kristof Ralovich ]
+  * script to generate changelog from git
+
+  [ Ralovich Kristof ]
+
+ -- Ralovich Kristof <tade@cg.iit.bme.hu>  Tue, 25 Jun 2013 17:10:28 +0200
+
+antpm (1.6-0) UNRELEASED; urgency=low
+
+  [ RALOVICH, Kristóf ]
+  * include Release builds in a .deb. package
+  * clarify build- and run-time dependencies
+  * add todo
+  * fix build with clang 3.0
+  * add some documentation
+  * fix build warning
+  * git should ignore build folder
+  * AntFr310XT2::createDownloadFolder()
+  * further define folder name based on device S/N
+  * cleanup
+  * deb: lower build time dependencies
+  * create download folder after knowing the device id
+  * fit2gpx: option to decode ANT root folder
+  * initial, file based logging
+  * docs: note on performance
+  * fix output
+  * use centralized logging in more places
+  * fix output
+  * introduce namespace antpm
+  * namespace conversion
+  * missing namespace
+  * more unified logging
+  * more unified logging
+  * cleanup
+  * fix an assertion failure
+  * unified logging replaced loggerc()
+  * reindent
+  * define NDEBUG in release
+  * avoid crashes
+
+  [ unknown ]
+  * build fixes
+
+  [ RALOVICH, Kristóf ]
+  * add todo
+  * add todo
+  * move GARMIN_EPOCH to antdefs.hpp
+  * bugfix: fix thinko
+  * try setting date of .fit files
+  * change logging
+  * first stub for centralized per-device setting
+
+  [ RALOVICH, Kristof ]
+  * missing include
+  * cmake: fix linking under win
+  * previously the x86 dll hada weird name...
+  * cmake: make sure the correct generator is invoked
+  * fix 64-bit linking
+  * cmake: fix determination of win64
+  * scripts: build helper for win64
+  * antpm-downloader: bugfix
+  * update discriution list
+
+  [ Kristof Ralovich ]
+  * deb: relax build time dependencies
+
+  [ RALOVICH, Kristof ]
+  * deb: libusb was missing as a build-dep
+
+  [ Kristof Ralovich ]
+  * bugfix: resolve gcc-4.4 build issues
+
+  [ RALOVICH, Kristof ]
+  * pkgconfig should look for libusb-1.0
+
+  [ Kristof Ralovich ]
+  * cleanup
+  * fix missing include
+  * debian: fixing dependencies
+  * account for boost:filesystem version changes
+
+  [ RALOVICH, Kristof ]
+  * cmake: fix finding libusb under nix
+
+  [ Ralovich Kristof ]
+
+ -- Ralovich Kristof <tade@cg.iit.bme.hu>  Tue, 25 Jun 2013 17:02:17 +0200
+
+antpm (1.0-1) UNRELEASED; urgency=low
+
+  * Initial release.
+
+ -- Kristof Ralovich <tade60@freemail.hu>  Tue, 21 Mar 2013 16:22:10 +0100

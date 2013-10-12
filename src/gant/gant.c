@@ -32,7 +32,7 @@ typedef enum {
    XML_IN_Activity,
    XML_IN_Lap,
    XML_IN_Track,
-   XML_IN_Trackpoint,
+   XML_IN_Trackpoint
 } xml_pos;
 
 struct _activity {
@@ -82,7 +82,7 @@ int sentgetv;
 char *fname = "garmin";
 time_t garmin_epoch = 631065600;
 
-static uchar ANTSPT_KEY[] = "A8A423B9F55E63C1";	// ANT+Sport key
+static const uchar ANTSPT_KEY[] = "A8A423B9F55E63C1";	// ANT+Sport key
 
 static uchar ebuf[MESG_DATA_SIZE];	// response event data gets stored here
 static uchar cbuf[MESG_DATA_SIZE];	// channel event data gets stored here
@@ -114,7 +114,7 @@ uint unitid = 0;
 
 //char *getversion = "440dffff00000000fe00000000000000";
 //char *getgpsver = "440dffff0000000006000200ff000000";
-char *acks[] = {
+const char *acks[] = {
    "fe00000000000000",		// get version - 255, 248, 253
    "0e02000000000000",		// device short name (fr405a) - 525
 // "1c00020000000000", // no data
@@ -257,22 +257,22 @@ void print_tcx_footer(xmlTextWriterPtr tcxfile)
    return;
 }
 
-void dump_data(FILE * out, void *data, size_t offset, size_t size)
+void dump_data(FILE * out, uchar *data, size_t offset, size_t size)
 {
    unsigned char buf[16];
    int i, j;
-   for (i=0; i < size; i+=16)
+   for (i=0; i < (int)size; i+=16)
    {
       memset(buf, 0, sizeof buf);
       memcpy(buf, data + offset + i, (size-i >= 16)? 16 : (size-i));
-      fprintf(out, "0x%04x:", offset + i);
+      fprintf(out, "0x%04lx:", (unsigned long)(offset + i));
 
       for (j=0; j < 16; j++)
       {
 	 if (j == 8)
 	    fprintf(out, " ");
 
-	 if (i+j >= size)
+   if (i+j >= (int)size)
 	    fprintf(out, "   ");
 	 else
 	    fprintf(out, " %02x", buf[j]);
@@ -281,7 +281,7 @@ void dump_data(FILE * out, void *data, size_t offset, size_t size)
       fprintf(out, " ");
       for (j=0; j < 16; j++)
       {
-	 if (i+j >= size)
+        if (i+j >= (int)size)
 	    break;
 
 	 if (j == 8)
@@ -297,7 +297,7 @@ void dump_data(FILE * out, void *data, size_t offset, size_t size)
    } // for (i=0; i < size; i+=16)
 
    return;
-} // void dump_data(void *data, siz...
+} // void dump_ata(void *data, siz...
 
 
 #pragma pack(1)
@@ -818,7 +818,7 @@ uchar chevent(uchar chan, uchar event)
 {
    uchar status;
    uchar phase;
-   uint newdata;
+   /*uint newdata;*/
    struct ack_msg ack;
    struct auth_msg auth;
    struct pair_msg pair;
@@ -830,7 +830,7 @@ uchar chevent(uchar chan, uchar event)
    if (event == EVENT_RX_BROADCAST)
    {
       status = cbuf[1] & 0xd7;
-      newdata = cbuf[1] & 0x20;
+      /*newdata = cbuf[1] & 0x20;*/
       phase = cbuf[2];
    }
    cid = cbuf[4] + cbuf[5] * 256 + cbuf[6] * 256 * 256 + cbuf[7] * 256 * 256 * 256;
@@ -894,7 +894,7 @@ uchar chevent(uchar chan, uchar event)
 	    ack.c1 = 0x00;
 	    ack.c2 = 0x00;
 	    ack.id = 0;
-	    ANT_SendAcknowledgedData(chan, (void *)&ack);	// tell garmin we're finished
+	    ANT_SendAcknowledgedData(chan, (uchar *)&ack);	// tell garmin we're finished
 	    sleep(1);
 	    exit(1);
 	 }
@@ -1083,7 +1083,6 @@ uchar chevent(uchar chan, uchar event)
 	 if (sentauth)
 	 {
 	    static int nacksent = 0;
-	    char *ackdata;
 	    static char ackpkt[100];
 
 	    // ack the last packet
@@ -1095,9 +1094,9 @@ uchar chevent(uchar chan, uchar event)
 
 	    if (bloblen == 0)
 	    {
-	       DEBUG_OUT(2, "bloblen %d, get next data", bloblen);
 	       // request next set of data
-	       ackdata = acks[nacksent++];
+	       const char* ackdata = acks[nacksent++];
+	       DEBUG_OUT(2, "bloblen %d, get next data", bloblen);
 	       if (!strcmp(ackdata, ""))
 	       {		// finished
 		  DEBUG_OUT(2, "ACKs finished, resetting");
@@ -1318,7 +1317,7 @@ int main(int ac, char *av[])
    int waveform = 0x0053;	// aids search somehow
    int c;
    extern char *optarg;
-   extern int optind, opterr, optopt;
+   extern int optind;
 
    // default auth file //
    if (getenv("HOME"))
@@ -1379,9 +1378,9 @@ int main(int ac, char *av[])
    if ((!passive && !authfile) || ac)
       usage();
 
-   if (!ANT_Init(devnum, 0))	// should be 115200 but doesn't fit into a short
+   if (!ANT_Init(devnum))	// should be 115200 but doesn't fit into a short
    {
-      ERROR_OUT("Open dev %d failed", devnum);
+      ERROR_OUT("Open /dev/ttyUSB%d failed", devnum);
       exit(1);
    }
    ANT_ResetSystem();
