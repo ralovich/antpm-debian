@@ -1,4 +1,4 @@
-antpm (1.11+dev-1) unstable; urgency=low
+antpm (1.12-1) unstable; urgency=low
 
   * Initial release. Based on ANT+minus to supersede previous
     garmin-ant-downloader package.
