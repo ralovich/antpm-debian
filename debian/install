@@ -1,4 +1,0 @@
-gant/gant usr/bin/garmin-ant-downloader
-antpm-downloader usr/bin
-antpm-fit2gpx usr/bin
-antpm-usbmon2ant usr/bin
