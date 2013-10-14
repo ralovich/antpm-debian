@@ -1,20 +1,41 @@
-Source: garmin-ant-downloader
+Source: antpm
 Priority: optional
 Section: utils
 Maintainer: Debian running development group <pkg-running-devel@lists.alioth.debian.org>
 Uploaders: Christian Perrier <bubulle@debian.org> 
-Build-Depends: debhelper (>= 7.3.10), libxml2-dev
+Build-Depends: debhelper (>= 7.3.10), devscripts (>= 2.10), g++ (>= 4.4) | clang (>= 3.0), libboost-dev (>= 1.41) | libboost1.41-dev, cmake (>= 2.8), libusb-dev, libxml2-dev
 Standards-Version: 3.9.2
-Vcs-Git: git://git.debian.org/git/pkg-running/garmin-ant-downloader.git
-Vcs-Browser: http://git.debian.org/?p=pkg-running/garmin-ant-downloader.git;a=summary
+Vcs-Git: git://git.debian.org/git/pkg-running/antpm.git
+Vcs-Browser: http://git.debian.org/?p=pkg-running/antpm.git;a=summary
 
-Package: garmin-ant-downloader
+Package: antpm
+Replaces: garmin-ant-downloader (<< 1.11-1)
+Breaks: garmin-ant-downloader (<< 1.11-1)
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, libstdc++6 (>=4.4.0)
 Description: ANT+ information retrieval client for Garmin GPS products
  This software uses the Garmin ANT+ proprietary USB keys and
  communication protocol to retrieve information (such as GPS traces)
- from some Garmin Forerunner watches such as Forerunner 405.
+ from some Garmin Forerunner watches such as Forerunner 405 and 310XT.
+ .
+ The underlying ANT+minus implements the ANT/ANT+/ANT-FS protocols to
+ provide these tools: garmin-ant-downloader, antpm-downloader,
+ antpm-fit2gpx, and antpm-usbmon2ant.
+ .
+ ANT+minus is a userspace implementation of a wire protocol similar
+ to the ANT/ANT+/ANT-FS protocols. The goal is to be able to communicate
+ with any ANT capable device in order to e.g. retrieve sports tracks. The
+ c++ implementation is currently available under both linux and win.
+ Communication with watches other than the 310XT might work, but are
+ untested. Please report your experience to help improving the software. 
  .
  The software was originally named "gant" but renamed when packaged
  to avoid confusion with existing Java software.
+
+
+Package: garmin-ant-downloader
+Depends: antpm, ${misc:Depends}
+Architecture: all
+Section: oldlibs
+Description: transitional dummy package
+ This is a transitional dummy package. It can safely be removed.

@@ -1,8 +1,39 @@
-#! /usr/bin/make -f
+#!/usr/bin/make -f
+# -*- makefile -*-
 
-override_dh_install:
-	mv gant garmin-ant-downloader
-	dh_install
+# ifeq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+#   CFLAGS += -O2
+# endif
+
+export DH_VERBOSE=1
+
+NUMCPUS=$(shell grep -c '^processor' /proc/cpuinfo)
+
+CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
+CFLAGS:=$(shell dpkg-buildflags --get CFLAGS) $(CPPFLAGS)
+CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS) $(CPPFLAGS)
+LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
+
 %:
 	dh $@
 
+override_dh_auto_configure:
+	# echo -e "\n\n\nCMAKE\n\n\n"
+	# echo $(NUMCPUS)
+	mkdir cmake-build
+	cd cmake-build && cmake ../src -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS} $(CFLAGS)" -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} $(CXXFLAGS)"
+
+override_dh_auto_build:
+	cd cmake-build && $(MAKE) -j$(NUMCPUS)
+
+DESTDIR=../debian/antpm/
+override_dh_install:
+	#cd cmake-build && $(MAKE) install DESTDIR=$(DESTDIR)
+	dh_installudev 
+
+build:
+	cp scripts/80-ant-stick.rules debian/antpm.udev
+	cp src/antpm-downloader.1 debian/
+	cp src/antpm-fit2gpx.1 debian/
+	cp src/antpm-usbmon2ant.1 debian/
+	cp src/gant/gant.1 debian/garmin-ant-downloader.1
