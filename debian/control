@@ -3,14 +3,14 @@ Priority: optional
 Section: utils
 Maintainer: Debian running development group <pkg-running-devel@lists.alioth.debian.org>
 Uploaders: Christian Perrier <bubulle@debian.org> 
-Build-Depends: debhelper (>= 7.3.10), devscripts (>= 2.10), g++ (>= 4.4) | clang (>= 3.0), libboost-dev (>= 1.41) | libboost1.41-dev, cmake (>= 2.8), libusb-dev, libxml2-dev
+Build-Depends: debhelper (>= 7.3.10), devscripts (>= 2.10), g++ (>= 4.4) | clang (>= 3.0), libboost-dev (>= 1.41) | libboost1.41-dev, cmake (>= 2.8), libusb-dev, pkg-config (>= 0.25), libxml2-dev
 Standards-Version: 3.9.2
 Vcs-Git: git://git.debian.org/git/pkg-running/antpm.git
 Vcs-Browser: http://git.debian.org/?p=pkg-running/antpm.git;a=summary
 
 Package: antpm
-Replaces: garmin-ant-downloader (<< 1.11-1)
-Breaks: garmin-ant-downloader (<< 1.11-1)
+Replaces: garmin-ant-downloader (<< 1.12-2)
+Breaks: garmin-ant-downloader (<< 1.12-2)
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libstdc++6 (>=4.4.0)
 Description: ANT+ information retrieval client for Garmin GPS products

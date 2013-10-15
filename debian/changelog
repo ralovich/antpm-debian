@@ -1,3 +1,9 @@
+antpm (1.12-2) unstable; urgency=low
+
+  * pkg-config is also a Build-Depends
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Mon, 14 Oct 2013 13:53:50 +0200
+
 antpm (1.12-1) unstable; urgency=low
 
   * Initial release. Based on ANT+minus to supersede previous
