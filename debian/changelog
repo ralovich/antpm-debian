@@ -1,6 +1,10 @@
-antpm (1.12-2) unstable; urgency=low
+antpm (1.12-2) UNRELEASED; urgency=low
 
+  [ Kristof Ralovich ]
   * pkg-config is also a Build-Depends
+
+  [ Christian Perrier ]
+  * Add required boost libraries to Build-Depends
 
  -- Kristof Ralovich <ralovich@in.tum.de>  Tue, 15 Oct 2013 09:25:02 +0200
 
