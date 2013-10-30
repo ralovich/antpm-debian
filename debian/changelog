@@ -5,6 +5,7 @@ antpm (1.12-2) UNRELEASED; urgency=low
 
   [ Christian Perrier ]
   * Add required boost libraries to Build-Depends
+  * Bump debhelper compatibility to 9
 
  -- Kristof Ralovich <ralovich@in.tum.de>  Tue, 15 Oct 2013 09:25:02 +0200
 
