@@ -1,4 +1,4 @@
-antpm (13-1) unstable; urgency=low
+antpm (1.13-1) unstable; urgency=low
 
   [ RALOVICH, Kristof ]
   * Import upstream version v1.13. Including a fix for problem
