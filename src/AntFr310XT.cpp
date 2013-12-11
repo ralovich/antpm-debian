@@ -263,6 +263,17 @@ AntFr310XT2::handleEvents()
     }                                                                   \
   } while(0)
 
+#define checkForExit() do                                               \
+  {                                                                     \
+    boost::unique_lock<boost::mutex> lock(this->stateMtx);              \
+    if(this->state == ST_ANTFS_LAST)                                    \
+    {                                                                   \
+      lock.unlock();                                                    \
+      this->stop();                                                     \
+      return true;                                                      \
+    }                                                                   \
+  } while(0)
+
   while(!m_evQue.empty())
   {
     AntMessage m;
@@ -326,7 +337,19 @@ AntFr310XT2::handleEvents()
       return true;
     }
 
-    CHECK_RETURN_FALSE(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_ID_ID));
+    //CHECK_RETURN_FALSE(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_ID_ID));
+    ushort devNum=0;
+    uchar  devId=0;
+    uchar  transType=0;
+    CHECK_RETURN_FALSE(m_antMessenger->ANT_GetChannelId(chan, &devNum, &devId, &transType, 1000));
+    LOG(LOG_RAW) << "\n\nFound device devNum=0x" << toString<ushort>(devNum) << " devId=0x" << toString<uint>(devId,2,'0') << " transType=0x" << toString<uint>(transType,2,'0') << "\n\n\n";
+    GarminProducts prod;
+    if(guessDeviceType(devNum, devId, transType, &prod))
+    {
+      if(prod==GarminFR310XT) { LOG(LOG_INF) << "guessed: GarminFR310XT\n\n\n"; }
+      if(prod==GarminFR405) { LOG(LOG_INF) << "guessed: GarminFR405\n\n\n"; }
+    }
+    else { LOG(LOG_WARN) << "guessing failed!\n"; }
 
     CHECK_RETURN_FALSE(m_antMessenger->ANTFS_Link(chan, fsFreq, beaconPer, hostSN));
 
@@ -461,6 +484,7 @@ AntFr310XT2::handleEvents()
     uint fileCnt=0;
     for(size_t i=0; i<zfc.waypointsFiles.size() && fileCnt<m_ds->MaxFileDownloads; i++)
     {
+      checkForExit();
       LOG_VAR3(fileCnt, m_ds->MaxFileDownloads, zfc.waypointsFiles.size());
       ushort fileIdx = zfc.waypointsFiles[i];
       time_t t       = GarminConvert::gOffsetTime(zfc.getFitFileTime(fileIdx));
@@ -495,6 +519,7 @@ AntFr310XT2::handleEvents()
 
     for (size_t i=0; i<zfc.activityFiles.size() && fileCnt<m_ds->MaxFileDownloads; i++)
     {
+      checkForExit();
       LOG_VAR3(fileCnt, m_ds->MaxFileDownloads, zfc.activityFiles.size());
       ushort fileIdx = zfc.activityFiles[i];
       time_t t       = GarminConvert::gOffsetTime(zfc.getFitFileTime(fileIdx));
@@ -536,6 +561,7 @@ AntFr310XT2::handleEvents()
 
     for (size_t i=0; i<zfc.courseFiles.size() && fileCnt<m_ds->MaxFileDownloads; i++)
     {
+      checkForExit();
       LOG_VAR3(fileCnt, m_ds->MaxFileDownloads, zfc.courseFiles.size());
       ushort fileIdx = zfc.courseFiles[i];
       time_t t       = GarminConvert::gOffsetTime(zfc.getFitFileTime(fileIdx));
@@ -679,6 +705,36 @@ AntFr310XT2::createDownloadFolder()
     }
   }
   return true;
+}
+
+/// TODO: we need to refine these matches based on more trace data
+bool
+AntFr310XT2::guessDeviceType(const ushort devNum, const uchar devId, const uchar transType, GarminProducts* prod)
+{
+  if(!prod)
+    return false;
+
+  // 310
+  // devNum=0x4cd4, devId=0x01, transType=0x05
+  // Beacon=8Hz
+  if( devNum==0x4cd4 )
+  {
+    *prod = GarminFR310XT;
+    return true;
+  }
+
+
+  // 405
+  // devNum=0xc12e, devId=0x01, transType=0x05
+  // Beacon=1Hz
+  if( devNum==0xc12e )
+  {
+    *prod = GarminFR405;
+    return true;
+  }
+
+
+  return false;
 }
 
 }
