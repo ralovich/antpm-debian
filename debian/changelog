@@ -1,3 +1,16 @@
+antpm (1.13-1) unstable; urgency=low
+
+  [ RALOVICH, Kristof ]
+  * Import upstream version v1.13. Including a fix for problem
+    with _orig tarball, and initial identification of different
+    watches, to tell the 310 and 405 apart.
+
+  [ Noël Köthe ]
+  * Additional a small patch for PROTOCOL_HELP.txt which would
+    have helped me and might make it easier for other.;)
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Thu, 12 Dec 2013 00:25:44 +0100
+
 antpm (1.12-2) UNRELEASED; urgency=low
 
   [ Kristof Ralovich ]
