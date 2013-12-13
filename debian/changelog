@@ -9,7 +9,7 @@ antpm (1.13-1) unstable; urgency=low
   * Additional a small patch for PROTOCOL_HELP.txt which would
     have helped me and might make it easier for other.;)
 
- -- Kristof Ralovich <ralovich@in.tum.de>  Thu, 12 Dec 2013 00:25:44 +0100
+ -- Christian Perrier <bubulle@debian.org>  Fri, 13 Dec 2013 06:12:01 +0100
 
 antpm (1.12-2) UNRELEASED; urgency=low
 
