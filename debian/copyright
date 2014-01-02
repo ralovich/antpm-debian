@@ -30,3 +30,54 @@ Original software copyright information:
 
 On Debian GNU/Linux systems, the complete text of the GNU General
 Public License can be found in `/usr/share/common-licenses/GPL-3'.
+
+
+w_inttypes.h, w_stdint.h Copyright (c) 2006-2008 Alexander Chemeris
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ 
+   1. Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+ 
+   2. Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+ 
+   3. The name of the author may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+ 
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+antpm portions © 2011-2013 RALOVICH, Kristóf <tade60@freemail.hu> released under GPLv2
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ version 2 as published by the Free Software Foundation.
+
+
+SerialUsb.cpp portions Copyright (C) 2010 Craig Shelley (craig@microtron.org.uk)
+ Portions copyright as:
+ Silicon Laboratories CP2101/CP2102/CP2103 USB to RS232 serial adaptor driver
+
+ Copyright (C) 2010 Craig Shelley (craig@microtron.org.uk)
+
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License version
+	2 as published by the Free Software Foundation.
+
+ Support to set flow control line levels using TIOCMGET and TIOCMSET
+ thanks to Karl Hiramoto karl@hiramoto.org. RTSCTS hardware flow
+ control thanks to Munir Nassar nassarmu@real-time.com
+ Original backport to 2.4 by andreas 'randy' weinberger randy@ebv.com
+ Several fixes and enhancements by Bill Pfutzenreuter BPfutzenreuter@itsgames.com
+ Ported to userspace by Kristof Ralovich
+
