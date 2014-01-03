@@ -1,3 +1,10 @@
+antpm (1.13-2) UNRELEASED; urgency=low
+
+  [ Kristof Ralovich ]
+  * extend copyright file
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Tue, 03 Jan 2014 07:54:56 +0200
+
 antpm (1.13-1) unstable; urgency=low
 
   [ RALOVICH, Kristof ]
