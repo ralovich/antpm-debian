@@ -1,9 +1,17 @@
-antpm (1.13-2) UNRELEASED; urgency=low
+antpm (1.14-1) UNRELEASED; urgency=low
 
-  [ Kristof Ralovich ]
+  [ Christian Perrier ]
+  * Bump debhelper compatibility to 9
+  * Update Standards to 3.9.5 (checked)
+  * Release 1.13-1
+  * Add gbp.conf to use gz compression for upstream tarball
+
+  [ RALOVICH, Kristof ]
   * extend copyright file
+  * update changelog too
+  * refine debian/copyright
 
- -- Kristof Ralovich <ralovich@in.tum.de>  Tue, 03 Jan 2014 07:54:56 +0200
+ -- Kristof Ralovich <ralovich@in.tum.de>  Tue, 07 Jan 2014 01:15:07 +0100
 
 antpm (1.13-1) unstable; urgency=low
 
