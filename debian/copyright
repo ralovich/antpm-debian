@@ -10,12 +10,13 @@ Original software copyright information:
 © 2009-2009 Wali
 © 2010 Klaus@Ethgen.de. released under GPLv3
 © 2010-2012 by Oleg Khudyakov released under GPLv2+
-© 2011-2013 RALOVICH, Kristóf <tade60@freemail.hu> released under GPLv2
+© 2011-2013 RALOVICH, Kristóf <tade60@freemail.hu> released under GPLv3
 
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 3 dated June, 2007.
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,9 +24,7 @@ Original software copyright information:
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program;  if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA 02110-1301, USA.
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 On Debian GNU/Linux systems, the complete text of the GNU General
@@ -58,14 +57,8 @@ w_inttypes.h, w_stdint.h Copyright (c) 2006-2008 Alexander Chemeris
  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-antpm portions © 2011-2013 RALOVICH, Kristóf <tade60@freemail.hu> released under GPLv2
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- version 2 as published by the Free Software Foundation.
-
-
 SerialUsb.cpp portions Copyright (C) 2010 Craig Shelley (craig@microtron.org.uk)
- Portions copyright as:
+SerialUsb.cpp Portions copyright as:
  Silicon Laboratories CP2101/CP2102/CP2103 USB to RS232 serial adaptor driver
 
  Copyright (C) 2010 Craig Shelley (craig@microtron.org.uk)
