@@ -16,7 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 // ***** END LICENSE BLOCK *****
 
-#include "AntFr310XT.hpp"
+#include "AntFr405.hpp"
 #include "SerialTty.hpp"
 #include "SerialUsb.hpp"
 #include "antdefs.hpp"
@@ -59,9 +59,9 @@ const uchar fsSearchTimeout = 0x03;
 
 
 
-struct AntFr310XT_EventLoop
+struct AntFr405_EventLoop
 {
-  void operator() (AntFr310XT* arg)
+  void operator() (AntFr405* arg)
   {
     //printf("msgFunc, arg: %p\n", arg); fflush(stdout);
     if(!arg)
@@ -69,14 +69,14 @@ struct AntFr310XT_EventLoop
       rv=0;
       return;
     }
-    AntFr310XT* This = reinterpret_cast<AntFr310XT*>(arg);
+    AntFr405* This = reinterpret_cast<AntFr405*>(arg);
     //printf("msgFunc, This: %p\n", This); fflush(stdout);
     rv = This->th_eventLoop();
   }
   void* rv;
 };
 
-AntFr310XT::AntFr310XT(bool eventLoopInBgTh)
+AntFr405::AntFr405(bool eventLoopInBgTh)
   : m_serial(new ANTPM_SERIAL_IMPL())
   , m_antMessenger(new AntMessenger(eventLoopInBgTh))
   , aplc(getConfigFolder()+std::string("antparse_")+getDateString()+".txt")
@@ -91,14 +91,14 @@ AntFr310XT::AntFr310XT(bool eventLoopInBgTh)
   state = ST_ANTFS_0;
   m_eventThKill=0;
 
-  AntFr310XT_EventLoop eventTh;
+  AntFr405_EventLoop eventTh;
   eventTh.rv=0;
   m_eventTh = boost::thread(eventTh, this);
 
 }
 
 
-AntFr310XT::~AntFr310XT()
+AntFr405::~AntFr405()
 {
   m_antMessenger->setCallback(0);
   //m_antMessenger->setHandler(0);
@@ -114,14 +114,14 @@ AntFr310XT::~AntFr310XT()
 
 
 void
-AntFr310XT::setModeDownloadAll()
+AntFr405::setModeDownloadAll()
 {
   mode = MD_DOWNLOAD_ALL;
   LOG_VAR2(mode, ModeOfOperation2Str(mode));
 }
 
 void
-AntFr310XT::setModeDownloadSingleFile( const uint16_t fileIdx )
+AntFr405::setModeDownloadSingleFile( const uint16_t fileIdx )
 {
   mode = MD_DOWNLOAD_SINGLE_FILE;
   singleFileIdx = fileIdx;
@@ -129,14 +129,14 @@ AntFr310XT::setModeDownloadSingleFile( const uint16_t fileIdx )
 }
 
 void
-AntFr310XT::setModeDirectoryListing()
+AntFr405::setModeDirectoryListing()
 {
   mode = MD_DIRECTORY_LISTING;
   LOG_VAR2(mode, ModeOfOperation2Str(mode));
 }
 
 void
-AntFr310XT::setModeEraseSingleFile(const uint16_t fileIdx)
+AntFr405::setModeEraseSingleFile(const uint16_t fileIdx)
 {
   mode = MD_ERASE_SINGLE_FILE;
   singleFileIdx = fileIdx;
@@ -145,7 +145,7 @@ AntFr310XT::setModeEraseSingleFile(const uint16_t fileIdx)
 
 
 void
-AntFr310XT::setModeEraseAllActivities()
+AntFr405::setModeEraseAllActivities()
 {
   mode = MD_ERASE_ALL_ACTIVITIES;
   LOG_VAR2(mode, ModeOfOperation2Str(mode));
@@ -153,20 +153,21 @@ AntFr310XT::setModeEraseAllActivities()
 
 
 void
-AntFr310XT::onAntReceived(const AntMessage m)
+AntFr405::onAntReceived(const AntMessage m)
 {
   postEvent(m);
 }
 
 void
-AntFr310XT::onAntSent(const AntMessage m)
+AntFr405::onAntSent(const AntMessage m)
 {
+  LOG(antpm::LOG_DBG) << m.strDt(0.0) << "\n";
 }
 
 
 
 void
-AntFr310XT::start()
+AntFr405::start()
 {
   CHECK_RETURN(m_serial->open());
 
@@ -182,7 +183,7 @@ AntFr310XT::start()
     m_antMessenger->eventLoop();
 }
 
-void AntFr310XT::stop()
+void AntFr405::stop()
 {
   m_eventThKill = 1;
   //m_eventTh.join();
@@ -198,7 +199,7 @@ void AntFr310XT::stop()
   changeState(ST_ANTFS_START0, true);
 }
 
-void AntFr310XT::stopAsync()
+void AntFr405::stopAsync()
 {
   // FIXME: setting ST_ANTFS_LAST might not be enough for stopping immediately,
   //        as other thread might be
@@ -208,21 +209,21 @@ void AntFr310XT::stopAsync()
 
 
 const int
-AntFr310XT::getSMState() const
+AntFr405::getSMState() const
 {
   //boost::unique_lock<boost::mutex> lock(this->stateMtx); // not needed, as this is a atomic read
   return state;
 }
 
 const char*
-AntFr310XT::getSMStateStr() const
+AntFr405::getSMStateStr() const
 {
   //boost::unique_lock<boost::mutex> lock(this->stateMtx); // not needed, as this is a atomic read
   return StateFSWork2Str(state);
 }
 
 void
-AntFr310XT::postEvent(const AntMessage& m)
+AntFr405::postEvent(const AntMessage& m)
 {
   m_evQue.push(m);
 }
@@ -230,7 +231,7 @@ AntFr310XT::postEvent(const AntMessage& m)
 
 
 void*
-AntFr310XT::th_eventLoop()
+AntFr405::th_eventLoop()
 {
   for(;;)
   {
@@ -251,7 +252,7 @@ AntFr310XT::th_eventLoop()
 
 
 bool
-AntFr310XT::handleEvents()
+AntFr405::handleEvents()
 {
 #define changeStateSafe(x) do                                           \
   {                                                                     \
@@ -448,37 +449,24 @@ AntFr310XT::handleEvents()
   }
   else if(state == ST_ANTFS_DL_DIRECTORY)
   {
-    CHECK_RETURN_FALSE(createDownloadFolder());
+    // when authentication succeeds, State=Transport beacon arrives
+    //R  96.026 MESG_BROADCAST_DATA_ID chan=0x00 ANTFS_BEACON(0x43) Beacon=1Hz, pairing=disabled, upload=disabled, dataAvail=no, State=Transport, Auth=PasskeyAndPairingOnly
+    //R 124.999 MESG_BROADCAST_DATA_ID chan=0x00 ANTFS_BEACON(0x43) Beacon=1Hz, pairing=disabled, upload=disabled, dataAvail=no, State=Transport, Auth=PasskeyAndPairingOnly
+    //S 114.743 MESG_REQUEST_ID chan=0x00 reqMsgId=MESG_CHANNEL_STATUS_ID
+    //R   3.247 MESG_CHANNEL_STATUS_ID chan=00 chanSt=Tracking
+    //S  12.451 MESG_BURST_DATA_ID chan=0x00, seq=0, last=no  ANTFS_CMD(0x44) ANTFS_CmdDirect fd=0xffff, offset=0x0000, data=0x0000
+    //R   1.546 MESG_BROADCAST_DATA_ID chan=0x00 ANTFS_BEACON(0x43) Beacon=1Hz, pairing=disabled, upload=disabled, dataAvail=no, State=Transport, Auth=PasskeyAndPairingOnly
+    //S   2.477 MESG_BURST_DATA_ID chan=0x00, seq=1, last=yes fe00000000000000 ........
 
-    //ANTFS_Upload(); //command pipe
-    //ANTFS_UploadData();
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(0xfe00000000000000)));
 
-    std::vector<uchar> dir;
-    if(!m_antMessenger->ANTFS_Download(chan, 0x0000, dir))
-    {
-      changeStateSafe(ST_ANTFS_RESTART);
-      return true;
-    }
-    LOG(LOG_RAW) << "\n\nDownloaded directory file idx=0x0000\n\n\n";
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(0x06000200ff000000)));
 
-    AntFsFile file0;
-    file0.bytes=dir;
-    LOG_VAR(file0.checkCrc());
-    file0.saveToFile((folder+"0000.fit").c_str());
+    // 06000200f8000000
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(0x06000200f8000000)));
 
-    CHECK_RETURN_FALSE(fit.parseZeroFile(dir, zfc));
-    LOG_VAR(zfc.activityFiles.size());
-    LOG_VAR(zfc.courseFiles.size());
-    LOG_VAR(zfc.waypointsFiles.size());
-
-    // TODO: read bcast here?
-
-    // channel status <>
-    //CHECK_RETURN_FALSE_LOG_OK(ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
-    if(mode==MD_DIRECTORY_LISTING)
-      changeStateSafe(ST_ANTFS_LAST);
-    else
-      changeStateSafe(ST_ANTFS_DL_FILES);
+    // just exit
+    changeStateSafe(ST_ANTFS_LAST);
   }
   else if(state==ST_ANTFS_DL_FILES)
   {
@@ -655,7 +643,7 @@ AntFr310XT::handleEvents()
 
 
 int
-AntFr310XT::changeState(const int newState, bool force)
+AntFr405::changeState(const int newState, bool force)
 {
   boost::unique_lock<boost::mutex> lock(stateMtx);
   int oldState = this->state;
@@ -672,8 +660,8 @@ AntFr310XT::changeState(const int newState, bool force)
 }
 
 
-AntFr310XT::StateANTFS
-AntFr310XT::changeFSState(const AntFr310XT::StateANTFS newState)
+AntFr405::StateANTFS
+AntFr405::changeFSState(const AntFr405::StateANTFS newState)
 {
   StateANTFS oldState = this->clientState;
   this->clientState = newState;
@@ -683,7 +671,7 @@ AntFr310XT::changeFSState(const AntFr310XT::StateANTFS newState)
 
 
 bool
-AntFr310XT::createDownloadFolder()
+AntFr405::createDownloadFolder()
 {
   if(!folder.empty())
   {
@@ -716,7 +704,7 @@ AntFr310XT::createDownloadFolder()
 
 /// TODO: we need to refine these matches based on more trace data
 bool
-AntFr310XT::guessDeviceType(const ushort devNum, const uchar devId, const uchar transType, GarminProducts* prod)
+AntFr405::guessDeviceType(const ushort devNum, const uchar devId, const uchar transType, GarminProducts* prod)
 {
   if(!prod)
     return false;

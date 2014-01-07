@@ -1,13 +1,19 @@
 // -*- mode: c++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; coding: utf-8-unix -*-
 // ***** BEGIN LICENSE BLOCK *****
-////////////////////////////////////////////////////////////////////
-// Copyright (c) 2011-2013 RALOVICH, Kristóf                      //
-//                                                                //
-// This program is free software; you can redistribute it and/or  //
-// modify it under the terms of the GNU General Public License    //
-// version 2 as published by the Free Software Foundation.        //
-//                                                                //
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2011-2014 RALOVICH, Kristóf                            //
+//                                                                      //
+// This program is free software; you can redistribute it and/or modify //
+// it under the terms of the GNU General Public License as published by //
+// the Free Software Foundation; either version 3 of the License, or    //
+// (at your option) any later version.                                  //
+//                                                                      //
+// This program is distributed in the hope that it will be useful,      //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of       //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        //
+// GNU General Public License for more details.                         //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 // ***** END LICENSE BLOCK *****
 
 
@@ -202,6 +208,22 @@ writeUInt64(const uint clientSN, const uint64_t& pairedKey)
   }
 }
 
+uint64_t
+SwapDWord(uint64_t a)
+{
+  a = ((a & 0x00000000000000FFULL) << 56) |
+      ((a & 0x000000000000FF00ULL) << 40) |
+      ((a & 0x0000000000FF0000ULL) << 24) |
+      ((a & 0x00000000FF000000ULL) <<  8) |
+      ((a & 0x000000FF00000000ULL) >>  8) |
+      ((a & 0x0000FF0000000000ULL) >> 24) |
+      ((a & 0x00FF000000000000ULL) >> 40) |
+      ((a & 0xFF00000000000000ULL) >> 56);
+  return a;
+}
+
+
+
 std::vector<unsigned char>
 readFile(const char* fileName)
 {
@@ -380,6 +402,7 @@ AntFSCommandNames antFSCommandNames[]={
   ANTP_PAIR(ANTFS_ReqUpload),
   ANTP_PAIR(ANTFS_ReqErase),
   ANTP_PAIR(ANTFS_UploadData),
+  ANTP_PAIR(ANTFS_CmdDirect),
   {-1,"UNKNOWN"}
 };
 
@@ -389,6 +412,7 @@ AntFSResponseNames  antFSResponseNames[]={
   ANTP_PAIR(ANTFS_RespUpload),
   ANTP_PAIR(ANTFS_RespErase),
   ANTP_PAIR(ANTFS_RespUploadData),
+  ANTP_PAIR(ANTFS_RespDirect),
   {-1,"UNKNOWN"}
 };
 

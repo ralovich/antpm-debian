@@ -18,14 +18,20 @@
  *
  */
 // ***** BEGIN LICENSE BLOCK *****
-////////////////////////////////////////////////////////////////////
-// Copyright (c) 2011-2013 RALOVICH, Kristóf                      //
-//                                                                //
-// This program is free software; you can redistribute it and/or  //
-// modify it under the terms of the GNU General Public License    //
-// version 2 as published by the Free Software Foundation.        //
-//                                                                //
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2011-2014 RALOVICH, Kristóf                            //
+//                                                                      //
+// This program is free software; you can redistribute it and/or modify //
+// it under the terms of the GNU General Public License as published by //
+// the Free Software Foundation; either version 3 of the License, or    //
+// (at your option) any later version.                                  //
+//                                                                      //
+// This program is distributed in the hope that it will be useful,      //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of       //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        //
+// GNU General Public License for more details.                         //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 // ***** END LICENSE BLOCK *****
 
 
@@ -83,6 +89,7 @@ struct SerialUsbPrivate
   volatile int m_recvThKill;
   //AntCallback* m_callback;
   usb_dev_handle* dev;
+  size_t m_writeDelay;
 
 #define REQTYPE_HOST_TO_INTERFACE	0x41
 #define REQTYPE_INTERFACE_TO_HOST	0xc1
@@ -352,6 +359,7 @@ SerialUsb::SerialUsb()
   m_p.reset(new SerialUsbPrivate());
   m_p->m_recvThKill = 0;
   m_p->dev = 0;
+  m_p->m_writeDelay = 0;
 
   usb_init();
 
@@ -451,6 +459,7 @@ SerialUsb::close()
     }
     m_p->dev = 0;
   }
+  m_p->m_writeDelay = 0;
 }
 
 
@@ -542,6 +551,9 @@ SerialUsb::write(const char* src, const size_t sizeBytes, size_t& bytesWritten)
 
   bytesWritten = written;
 
+  if(m_p->m_writeDelay>0 && m_p->m_writeDelay<=10)
+    sleepms(m_p->m_writeDelay);
+
   return (bytesWritten==sizeBytes);
 }
 
@@ -597,11 +609,23 @@ const size_t SerialUsb::getQueueLength() const
 //}
 
 
+
+
 bool
 SerialUsb::isOpen() const
 {
   // TODO: is thread running too??
   return m_p.get() && m_p->dev;
 }
+
+
+bool
+SerialUsb::setWriteDelay(const size_t ms)
+{
+  m_p->m_writeDelay = ms;
+  return true;
+}
+
+
 
 }

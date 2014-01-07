@@ -1,14 +1,19 @@
 // -*- mode: c++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; coding: utf-8-unix -*-
 // ***** BEGIN LICENSE BLOCK *****
-////////////////////////////////////////////////////////////////////
-//                                                                //
-// Copyright (c) 2011-2013 RALOVICH, Kristóf                      //
-//                                                                //
-// This program is free software; you can redistribute it and/or  //
-// modify it under the terms of the GNU General Public License    //
-// version 2 as published by the Free Software Foundation.        //
-//                                                                //
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2011-2014 RALOVICH, Kristóf                            //
+//                                                                      //
+// This program is free software; you can redistribute it and/or modify //
+// it under the terms of the GNU General Public License as published by //
+// the Free Software Foundation; either version 3 of the License, or    //
+// (at your option) any later version.                                  //
+//                                                                      //
+// This program is distributed in the hope that it will be useful,      //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of       //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        //
+// GNU General Public License for more details.                         //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 // ***** END LICENSE BLOCK *****
 
 
@@ -41,6 +46,7 @@ DeviceSettings::loadDefaultValues()
   y2k.tm_isdst = -1;
   LastUserProfileTime = ::mktime(&y2k) - timezone;
   LastTransferredTime = ::mktime(&y2k) - timezone;
+  SerialWriteDelayMs = 3;
 }
 
 const std::string
@@ -106,6 +112,7 @@ DeviceSettings::saveToFile(const char *fname)
   pt.put("antpm.MaxFileDownloads", MaxFileDownloads);
   pt.put("antpm.LastUserProfileTime", time2str(LastUserProfileTime));
   pt.put("antpm.LastTransferredTime", time2str(LastTransferredTime));
+  pt.put("antpm.SerialWriteDelayMs", 3);
   try
   {
     boost::property_tree::ini_parser::write_ini(fname, pt);
@@ -134,9 +141,11 @@ bool DeviceSettings::loadFromFile(const char *fname)
   LOG_VAR(pt.get<unsigned int>("antpm.MaxFileDownloads"));
   LOG_VAR(pt.get<std::string>("antpm.LastUserProfileTime"));
   LOG_VAR(pt.get<std::string>("antpm.LastTransferredTime"));
+  LOG_VAR(pt.get<std::string>("antpm.SerialWriteDelayMs"));
   MaxFileDownloads    = pt.get<unsigned int>("antpm.MaxFileDownloads");
   LastUserProfileTime = str2time(pt.get<std::string>("antpm.LastUserProfileTime").c_str());
   LastTransferredTime = str2time(pt.get<std::string>("antpm.LastTransferredTime").c_str());
+  SerialWriteDelayMs = pt.get<size_t>("antpm.SerialWriteDelayMs");
   return true;
 }
 

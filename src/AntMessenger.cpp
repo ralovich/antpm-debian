@@ -1,13 +1,19 @@
 // -*- mode: c++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; coding: utf-8-unix -*-
 // ***** BEGIN LICENSE BLOCK *****
-////////////////////////////////////////////////////////////////////
-// Copyright (c) 2011-2013 RALOVICH, Kristóf                      //
-//                                                                //
-// This program is free software; you can redistribute it and/or  //
-// modify it under the terms of the GNU General Public License    //
-// version 2 as published by the Free Software Foundation.        //
-//                                                                //
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2011-2014 RALOVICH, Kristóf                            //
+//                                                                      //
+// This program is free software; you can redistribute it and/or modify //
+// it under the terms of the GNU General Public License as published by //
+// the Free Software Foundation; either version 3 of the License, or    //
+// (at your option) any later version.                                  //
+//                                                                      //
+// This program is distributed in the hope that it will be useful,      //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of       //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        //
+// GNU General Public License for more details.                         //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 // ***** END LICENSE BLOCK *****
 
 #include "AntMessenger.hpp"
@@ -770,6 +776,73 @@ AntMessenger::ANTFS_RequestClientDeviceSerialNumber(const uchar chan, const uint
 
   return true;
 }
+
+
+bool
+AntMessenger::ANTFS_Direct(const uchar chan, const uint64_t code)
+{
+  M_ANTFS_Command_Direct cmd;
+  cmd.commandId = ANTFS_CommandResponseId;
+  cmd.command   = ANTFS_CmdDirect;
+  cmd.detail.direct.fd = 0xffff;
+  cmd.detail.direct.offset = 0x0000;
+  cmd.detail.direct.data = 0x0000;
+  cmd.code = code;
+
+  bool sentDirect = false;
+  for(int i = 0; i < ANTPM_RETRIES; i++)
+  {
+    sentDirect = false;
+
+    LOG_VAR(waitForBroadcast(chan));
+
+    //CHECK_RETURN_FALSE_LOG_OK(collectBroadcasts(chan));
+    sentDirect = ANT_SendBurstData2(chan, reinterpret_cast<uchar*>(&cmd), sizeof(cmd));
+
+    // TODO: read bcast here?
+    //AntMessage reply0;
+    //waitForMessage(MESG_RESPONSE_EVENT_ID, &reply0, 2000);
+
+    AntChannel& pc(chs[chan]);
+    AntEvListener el(pc);
+    //pc.addEvListener(&el);
+
+    uint8_t responseVal;
+    sentDirect = sentDirect && el.waitForEvent(responseVal, 800);
+    //pc.rmEvListener(&el);
+    sentDirect = sentDirect && (responseVal==EVENT_TRANSFER_TX_COMPLETED);
+
+    if(sentDirect)
+      break;
+    else
+      sleepms(ANTPM_RETRY_MS);
+  }
+  CHECK_RETURN_FALSE_LOG_OK(sentDirect);
+
+
+
+  // ANTFS_RespDirect
+  std::vector<uchar> burstData;
+  CHECK_RETURN_FALSE_LOG_OK(waitForBurst(chan, burstData, 10*1000));
+
+  CHECK_RETURN_FALSE_LOG_OK(burstData.size()>=2*8);
+  const M_ANTFS_Beacon* beac(reinterpret_cast<const M_ANTFS_Beacon*>(&burstData[0]));
+  const M_ANTFS_Response* resp(reinterpret_cast<const M_ANTFS_Response*>(&burstData[8]));
+  CHECK_RETURN_FALSE_LOG_OK(resp->responseId==ANTFS_CommandResponseId);
+  CHECK_RETURN_FALSE_LOG_OK(resp->response==ANTFS_RespDirect);
+//  CHECK_RETURN_FALSE_LOG_OK(resp->detail.authenticateResponse.respType==1); // accept
+
+  logger() << "expecting " << resp->detail.directResponse.data << "x8 bytes of direct data, plus 16 bytes\n";
+
+  logger() << "got back = \"" << burstData.size() << "\" bytes\n";
+
+  CHECK_RETURN_FALSE_LOG_OK(burstData.size()==size_t((2+resp->detail.directResponse.data)*8));
+
+  CHECK_RETURN_FALSE_LOG_OK(ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
+
+  return true;
+}
+
 
 void AntMessenger::eventLoop()
 {

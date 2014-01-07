@@ -17,50 +17,37 @@
 // ***** END LICENSE BLOCK *****
 #pragma once
 
-//#include <pthread.h>
-#include <queue>
-#include <boost/thread.hpp>
 #include "antdefs.hpp"
-#include "lqueue.hpp"
-#include <list>
-#include "Serial.hpp"
+#include <vector>
+#include <boost/static_assert.hpp>
 
-namespace antpm{
+namespace antpm {
 
-struct SerialTtyPrivate;
-struct SerialTtyIOThread;
-// Serial communication over a POSIX serial port.
-class SerialTty : public Serial
+// create packets to send to device (to ask for tracks, etc.)
+
+// interpret incoming messages from stream of bytes
+
+// tasks:
+// - interpter usbmon logs
+// - download runs
+
+#pragma pack(push,1)
+struct GarminPacket
 {
-public:
-  SerialTty();
-  virtual ~SerialTty();
+  uint8_t  mPacketType;
+  uint8_t  mReserved123[3];
+  uint16_t mPacketId;
+  uint8_t  mReserved67[2];
+  uint32_t mDataSize;
+  uint8_t  mData[1];
+};
+#pragma pack(pop)
+BOOST_STATIC_ASSERT(sizeof(GarminPacket)==13);
 
-  virtual bool open();
-  virtual void close();
-
-  //virtual bool read(char& c);
-  virtual bool read(char* dst, const size_t sizeBytes, size_t& bytesRead);
-  virtual bool readBlocking(char* dst, const size_t sizeBytes, size_t& bytesRead);
-  virtual bool write(const char* src, const size_t sizeBytes, size_t& bytesWritten);
-
-  //virtual void wait();
-
-private:
-  friend struct SerialTtyIOThread;
-  void* ioHandler();
-
-public:
-  virtual const size_t getQueueLength() const;
-  virtual const char*  getImplName() { return "AntTtyHandler2"; }
-  virtual bool         isOpen() const;
-  virtual bool         setWriteDelay(const size_t ms);
-
-private:
-  void queueData();
-
-private:
-  std::auto_ptr<SerialTtyPrivate> m_p;
+struct GarminPacketIntf
+{
+  bool interpret(std::vector<uint8_t> data);
 };
 
 }
+

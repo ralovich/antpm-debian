@@ -1,13 +1,19 @@
 // -*- mode: c++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; coding: utf-8-unix -*-
 // ***** BEGIN LICENSE BLOCK *****
-////////////////////////////////////////////////////////////////////
-// Copyright (c) 2011-2013 RALOVICH, Kristóf                      //
-//                                                                //
-// This program is free software; you can redistribute it and/or  //
-// modify it under the terms of the GNU General Public License    //
-// version 2 as published by the Free Software Foundation.        //
-//                                                                //
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2011-2014 RALOVICH, Kristóf                            //
+//                                                                      //
+// This program is free software; you can redistribute it and/or modify //
+// it under the terms of the GNU General Public License as published by //
+// the Free Software Foundation; either version 3 of the License, or    //
+// (at your option) any later version.                                  //
+//                                                                      //
+// This program is distributed in the hope that it will be useful,      //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of       //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        //
+// GNU General Public License for more details.                         //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 // ***** END LICENSE BLOCK *****
 
 
@@ -78,7 +84,9 @@ isAntFSCommandOrResponse(const uchar command, bool& isCommand)
     || command==ANTFS_ReqDownload
     || command==ANTFS_ReqUpload
     || command==ANTFS_ReqErase
-    || command==ANTFS_UploadData      )
+    || command==ANTFS_UploadData
+    || command==ANTFS_CmdDirect
+     )
   {
     isCommand=true;
     return true;
@@ -88,6 +96,7 @@ isAntFSCommandOrResponse(const uchar command, bool& isCommand)
     || command==ANTFS_RespUpload
     || command==ANTFS_RespErase
     || command==ANTFS_RespUploadData
+    || command==ANTFS_RespDirect
     )
   {
     isCommand=false;
@@ -100,7 +109,6 @@ isAntFSCommandOrResponse(const uchar command, bool& isCommand)
 }
 
 
-bool AntMessage::lookupInVector = false;
 
 bool AntMessage::vrfChkSum() const
 {
@@ -191,6 +199,8 @@ const std::string AntMessage::str() const
 }
 
 
+// decoded message as string
+// e.g. "MESG_BURST_DATA_ID chan=0x00, seq=1, last=no  ANTFS_RESP(0x44) ANTFS_RespDirect fd=0xffff, offset=0x0000, data=0x0017"
 const std::string
 AntMessage::str2() const
 {
@@ -312,6 +322,10 @@ AntMessage::str2() const
 }
 
 
+// return as a string:
+// whether packet was sent or received, and time as string
+// decoded message
+// e.g. "R  23.003 MESG_BURST_DATA_ID chan=0x00, seq=1, last=no  ANTFS_RESP(0x44) ANTFS_RespDirect fd=0xffff, offset=0x0000, data=0x0017"
 const string AntMessage::strDt(const double &dt) const
 {
   if(bytes.empty())
@@ -514,6 +528,7 @@ bool AntMessage::fromStringOfBytes(const char *s)
 }
 
 
+/// Convert string of hexadecimal digits into binary byte array
 template <class Container>
 bool
 AntMessage::stringToBytes(const char *s, Container& bytes)

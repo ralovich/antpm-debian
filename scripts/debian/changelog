@@ -1,4 +1,55 @@
-antpm (1.12-1) UNRELEASED; urgency=low
+antpm (1.14-1) experimental; urgency=low
+
+  * housekeeping
+  * Blind implementation of messages seen in 405 traces.
+  * udev: add rule for 0fcf:1009
+  * improve src documentation
+  * remove unused AntMessage::lookupInVector
+  * remove unused code
+  * docs: note on pbuilder
+  * working on decoding garmin direct packets
+  * add BSWAP_64 macro
+  * working on decoding garmin direct packets 2.
+  * ant: base class for message contents
+  * antfs: more thorough decoding of direct responses
+  * Finish relicensing to GPLv3
+  * open for new development
+  * implement Serial::setWriteDelay() interface
+  * DeviceSettings: I/O for SerialWriteDelayMs from .ini
+  * It helps to delay the host from writing to device too fast.
+  * make orig tarball as .gz
+  * scripts: deb from .gz
+  * fix test case
+  * changelog: change distribution
+  * changelog: missing v1.13 notes
+  * changelog: remove duplicate entries
+  * add sources to orig tarball
+
+ -- RALOVICH, Kristof <tade60@freemail.hu>  Tue, 07 Jan 2014 00:35:05 +0100
+
+antpm (1.13-1) experimental; urgency=low
+
+  [ RALOVICH, Kristof ]
+  * 3rd_party: import usbmon tool
+  * docs: clarify capture notes
+  * docs: further clarify capture notes
+  * should build on any architecture
+
+  [ Noël Köthe ]
+  * Additional a small patch for PROTOCOL_HELP.txt which would have helped me and might make it easier for other.;)
+
+  [ RALOVICH, Kristof ]
+  * upon Ctrl+C give a hint that we gonna stop
+  * let's have M_ANT_Channel_Id in the header
+  * fix decoding in ANT_GetChannelId()
+  * initial work on guessing the client device type
+  * checkForExit() after downloading each file
+  * scripts: sinitize what goes into orig.tar.gz
+  * new version 1.13
+
+ -- RALOVICH, Kristof <tade60@freemail.hu>  Tue, 07 Jan 2014 00:06:04 +0100
+
+antpm (1.12-1) experimental; urgency=low
 
   [ RALOVICH, Kristof ]
   * travis: build the gant-integration branch too
@@ -11,7 +62,7 @@ antpm (1.12-1) UNRELEASED; urgency=low
 
  -- RALOVICH, Kristof <tade60@freemail.hu>  Mon, 14 Oct 2013 18:46:40 +0200
 
-antpm (1.11-1) UNRELEASED; urgency=low
+antpm (1.11-1) experimental; urgency=low
 
   [ Jordan Miller ]
   * First Import
@@ -98,7 +149,7 @@ antpm (1.11-1) UNRELEASED; urgency=low
 
  -- RALOVICH, Kristóf <tade60@freemail.hu>  Sat, 12 Oct 2013 01:32:08 +0200
 
-antpm (1.9-1) UNRELEASED; urgency=low
+antpm (1.9-1) experimental; urgency=low
 
   [ RALOVICH, Kristóf ]
   * docs: update todo list
@@ -140,14 +191,14 @@ antpm (1.9-1) UNRELEASED; urgency=low
 
  -- RALOVICH, Kristóf <tade60@freemail.hu>  Tue, 09 Jul 2013 19:05:03 +0200
 
-antpm (1.8-1) UNRELEASED; urgency=low
+antpm (1.8-1) experimental; urgency=low
 
   * GarminConvert: add a method that offsets the timestamps
   * AntMessage: bugfix: correctly convert file creation time
 
  -- RALOVICH, Kristóf <tade60@freemail.hu>  Sat, 06 Jul 2013 00:46:18 +0200
 
-antpm (1.7-1) UNRELEASED; urgency=low
+antpm (1.7-1) experimental; urgency=low
 
   * antpm-*: recongize -h option for --help too
   * fit: this is a run-time warning
@@ -164,7 +215,7 @@ antpm (1.7-1) UNRELEASED; urgency=low
 
  -- RALOVICH, Kristóf <tade60@freemail.hu>  Sat, 06 Jul 2013 00:11:34 +0200
 
-antpm (1.6-3) UNRELEASED; urgency=low
+antpm (1.6-3) experimental; urgency=low
 
   [ RALOVICH, Kristóf ]
   * docs: more notes
@@ -176,7 +227,7 @@ antpm (1.6-3) UNRELEASED; urgency=low
 
  -- Ralovich Kristof <tade@cg.iit.bme.hu>  Wed, 26 Jun 2013 11:43:35 +0200
 
-antpm (1.6-2) UNRELEASED; urgency=low
+antpm (1.6-2) experimental; urgency=low
 
   [ Kristof Ralovich ]
   * script to generate changelog from git
@@ -185,7 +236,7 @@ antpm (1.6-2) UNRELEASED; urgency=low
 
  -- Ralovich Kristof <tade@cg.iit.bme.hu>  Tue, 25 Jun 2013 17:10:28 +0200
 
-antpm (1.6-0) UNRELEASED; urgency=low
+antpm (1.6-0) experimental; urgency=low
 
   [ RALOVICH, Kristóf ]
   * include Release builds in a .deb. package
@@ -266,7 +317,7 @@ antpm (1.6-0) UNRELEASED; urgency=low
 
  -- Ralovich Kristof <tade@cg.iit.bme.hu>  Tue, 25 Jun 2013 17:02:17 +0200
 
-antpm (1.0-1) UNRELEASED; urgency=low
+antpm (1.0-1) experimental; urgency=low
 
   * Initial release.
 

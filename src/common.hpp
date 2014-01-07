@@ -1,13 +1,19 @@
 // -*- mode: c++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2; coding: utf-8-unix -*-
 // ***** BEGIN LICENSE BLOCK *****
-////////////////////////////////////////////////////////////////////
-// Copyright (c) 2011-2013 RALOVICH, Kristóf                      //
-//                                                                //
-// This program is free software; you can redistribute it and/or  //
-// modify it under the terms of the GNU General Public License    //
-// version 2 as published by the Free Software Foundation.        //
-//                                                                //
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2011-2014 RALOVICH, Kristóf                            //
+//                                                                      //
+// This program is free software; you can redistribute it and/or modify //
+// it under the terms of the GNU General Public License as published by //
+// the Free Software Foundation; either version 3 of the License, or    //
+// (at your option) any later version.                                  //
+//                                                                      //
+// This program is distributed in the hope that it will be useful,      //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of       //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        //
+// GNU General Public License for more details.                         //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 // ***** END LICENSE BLOCK *****
 #pragma once
 
@@ -65,6 +71,18 @@ readUInt64(const unsigned int clientSN, uint64_t& pairedKey);
 
 void
 writeUInt64(const unsigned int clientSN, const uint64_t& ui);
+
+uint64_t
+SwapDWord(uint64_t a);
+
+#define	BSWAP_64(x)     (((uint64_t)(x) << 56) | \
+                        (((uint64_t)(x) << 40) & 0xff000000000000ULL) | \
+                        (((uint64_t)(x) << 24) & 0xff0000000000ULL) | \
+                        (((uint64_t)(x) << 8)  & 0xff00000000ULL) | \
+                        (((uint64_t)(x) >> 8)  & 0xff000000ULL) | \
+                        (((uint64_t)(x) >> 24) & 0xff0000ULL) | \
+                        (((uint64_t)(x) >> 40) & 0xff00ULL) | \
+                        ((uint64_t)(x)  >> 56))
 
 std::vector<unsigned char>
 readFile(const char* fileName);
