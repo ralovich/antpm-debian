@@ -3,7 +3,7 @@ antpm (1.14-1) UNRELEASED; urgency=low
   [ Christian Perrier ]
   * Bump debhelper compatibility to 9
   * Update Standards to 3.9.5 (checked)
-  * Release 1.13-1
+  * Release 1.14-1
   * Add gbp.conf to use gz compression for upstream tarball
 
   [ RALOVICH, Kristof ]
