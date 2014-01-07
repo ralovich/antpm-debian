@@ -1,9 +1,10 @@
-antpm (1.14-1) UNRELEASED; urgency=low
+antpm (1.14-1) unstable; urgency=low
 
   [ Christian Perrier ]
+  * Release 1.14-1 with copyright clarifications from upstream
+    (Kristof re-licensed his own code in GPL-3)
   * Bump debhelper compatibility to 9
   * Update Standards to 3.9.5 (checked)
-  * Release 1.14-1
   * Add gbp.conf to use gz compression for upstream tarball
 
   [ RALOVICH, Kristof ]
@@ -11,7 +12,7 @@ antpm (1.14-1) UNRELEASED; urgency=low
   * update changelog too
   * refine debian/copyright
 
- -- Kristof Ralovich <ralovich@in.tum.de>  Tue, 07 Jan 2014 01:15:07 +0100
+ -- Christian Perrier <bubulle@debian.org>  Tue, 07 Jan 2014 07:26:12 +0100
 
 antpm (1.13-1) unstable; urgency=low
 
