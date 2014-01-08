@@ -1,4 +1,4 @@
-antpm (1.14-1) UNRELEASED; urgency=low
+antpm (1.14-1) unstable; urgency=low
 
   [ Christian Perrier ]
   * Bump debhelper compatibility to 9
@@ -46,3 +46,7 @@ antpm (1.12-1) unstable; urgency=low
 
  -- Kristof Ralovich <ralovich@in.tum.de>  Mon, 14 Oct 2013 13:53:50 +0200
 
+
+# Local Variables:
+# coding: utf-8
+# End:
