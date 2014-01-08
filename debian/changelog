@@ -1,3 +1,12 @@
+antpm (1.15-1) UNRELEASED; urgency=low
+
+  [ RALOVICH, Kristof ]
+  * Merge tag 'upstream/20140108'
+  * debian/changelog is utf-8
+  * debian/copyright: further clarification
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Wed, 08 Jan 2014 23:37:10 +0100
+
 antpm (1.14-1) unstable; urgency=low
 
   [ Christian Perrier ]
