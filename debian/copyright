@@ -10,7 +10,7 @@ Original software copyright information:
 © 2009-2009 Wali
 © 2010 Klaus@Ethgen.de. released under GPLv3
 © 2010-2012 by Oleg Khudyakov released under GPLv2+
-© 2011-2014 RALOVICH, Kristóf <tade60@freemail.hu> released under GPLv3
+© 2011-2014 RALOVICH, Kristóf <tade60@freemail.hu> released under GPLv3+
 
 
    This program is free software: you can redistribute it and/or modify
@@ -56,27 +56,4 @@ w_inttypes.h, w_stdint.h Copyright (c) 2006-2008 Alexander Chemeris
  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-SerialUsb.cpp portions Copyright (C) 2010 Craig Shelley (craig@microtron.org.uk)
-SerialUsb.cpp Portions copyright as:
- Silicon Laboratories CP2101/CP2102/CP2103 USB to RS232 serial adaptor driver
-
- Copyright (C) 2010 Craig Shelley (craig@microtron.org.uk)
-
-	This program is free software; you can redistribute it and/or
-	modify it under the terms of the GNU General Public License version
-	2 as published by the Free Software Foundation.
-
- Support to set flow control line levels using TIOCMGET and TIOCMSET
- thanks to Karl Hiramoto karl@hiramoto.org. RTSCTS hardware flow
- control thanks to Munir Nassar nassarmu@real-time.com
- Original backport to 2.4 by andreas 'randy' weinberger randy@ebv.com
- Several fixes and enhancements by Bill Pfutzenreuter BPfutzenreuter@itsgames.com
- Ported to userspace by Kristof Ralovich
-
-SerialUsb.cpp portions Copyright (c) 2011-2014 RALOVICH, Kristóf
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- version 2 as published by the Free Software Foundation.
 
