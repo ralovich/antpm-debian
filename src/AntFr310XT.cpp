@@ -77,8 +77,12 @@ struct AntFr310XT_EventLoop
 };
 
 AntFr310XT::AntFr310XT(bool eventLoopInBgTh)
-  : m_serial(new ANTPM_SERIAL_IMPL())
+  //: m_serial(new ANTPM_SERIAL_IMPL())
+  : m_serial(Serial::instantiate())
   , m_antMessenger(new AntMessenger(eventLoopInBgTh))
+  , state(ST_ANTFS_0)
+  , m_eventThKill(0)
+  , m_restartCount(0)
   , aplc(getConfigFolder()+std::string("antparse_")+getDateString()+".txt")
   , clientSN(0)
   , pairedKey(0)
@@ -86,10 +90,9 @@ AntFr310XT::AntFr310XT(bool eventLoopInBgTh)
   , doPairing(false)
   , mode(MD_DOWNLOAD_ALL)
 {
+  if(!m_serial) return;
   m_antMessenger->setHandler(m_serial.get());
   m_antMessenger->setCallback(this);
-  state = ST_ANTFS_0;
-  m_eventThKill=0;
 
   AntFr310XT_EventLoop eventTh;
   eventTh.rv=0;
@@ -100,7 +103,7 @@ AntFr310XT::AntFr310XT(bool eventLoopInBgTh)
 
 AntFr310XT::~AntFr310XT()
 {
-  m_antMessenger->setCallback(0);
+  if(m_antMessenger) m_antMessenger->setCallback(0);
   //m_antMessenger->setHandler(0);
 
   m_eventThKill=1;
@@ -109,7 +112,7 @@ AntFr310XT::~AntFr310XT()
 
   m_antMessenger.reset();
   m_serial.reset();
-  lprintf(LOG_DBG, "%s\n", __FUNCTION__);
+  lprintf(LOG_DBG2, "%s\n", __FUNCTION__);
 }
 
 
@@ -161,6 +164,7 @@ AntFr310XT::onAntReceived(const AntMessage m)
 void
 AntFr310XT::onAntSent(const AntMessage m)
 {
+  lprintf(antpm::LOG_DBG3, "%s\n", m.str().c_str());
 }
 
 
@@ -168,7 +172,8 @@ AntFr310XT::onAntSent(const AntMessage m)
 void
 AntFr310XT::start()
 {
-  CHECK_RETURN(m_serial->open());
+  CHECK_RETURN(m_serial);
+  CHECK_RETURN(m_serial->isOpen());
 
   //createDownloadFolder();
 
@@ -185,24 +190,34 @@ AntFr310XT::start()
 void AntFr310XT::stop()
 {
   m_eventThKill = 1;
+  // stop() might be called from the event thread
+  // terminate called after throwing an instance of 'boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::thread_resource_error> >'
+  //   what():  boost thread: trying joining itself: Resource deadlock avoided
   //m_eventTh.join();
   m_antMessenger->kill();
-  if(m_serial->isOpen())
+  if(m_serial && m_serial->isOpen())
   {
     if(state>ST_ANTFS_LINKING)
       m_antMessenger->ANTFS_Disconnect(chan);
     m_antMessenger->ANT_CloseChannel(chan);
     m_antMessenger->ANT_ResetSystem();
   }
-  m_serial->close();
+  if(m_antMessenger) m_antMessenger->setCallback(0);
+  //m_antMessenger->setHandler(0);
+  m_antMessenger.reset();
+  if(m_serial) m_serial->close();
   changeState(ST_ANTFS_START0, true);
 }
 
-void AntFr310XT::stopAsync()
+
+void
+AntFr310XT::stopAsync()
 {
+  LOG(LOG_WARN) << "stopAsync called!\n\n";
   // FIXME: setting ST_ANTFS_LAST might not be enough for stopping immediately,
   //        as other thread might be
   //        sleeping in a listener, and we stop only when that returns.
+  if(m_antMessenger) m_antMessenger->interruptWait(); // FIXME locking needed to access m_antMessenger!!!
   changeState(ST_ANTFS_LAST);
 }
 
@@ -296,17 +311,37 @@ AntFr310XT::handleEvents()
           changeState(ST_ANTFS_BAD);
         }
       }
+//      else if(msgId==MESG_CLOSE_CHANNEL_ID)
+//      {
+//        uint8_t msgCode = m.getPayloadRef()[2]; // e.g. CHANNEL_IN_WRONG_STATE
+//        if(msgCode==CHANNEL_IN_WRONG_STATE)
+//        {
+//          changeState(ST_ANTFS_BAD);
+//        }
+//      }
     }
   }
 
   // new state machine
   if(state==ST_ANTFS_RESTART)
   {
-    m_evQue.clear();
-    //m_antMessenger->clearRxQueue();
-    m_antMessenger->ANT_ResetSystem();
-    m_antMessenger->ANT_ResetSystem();
-    changeStateSafe(ST_ANTFS_START0);
+    if(++m_restartCount==10)
+    {
+      LOG(LOG_RAW) << "\n\nTried " << m_restartCount << " times, and couldn't communicate with ANT device!\n"
+                   << "Please try again running the downloader.\n"
+                   << "Sometimes re-plugging the USB ANT stick, and rarely power cycling (turn-off, turn-on)\n"
+                   << "the ANT device (watch/GPS) might help.\n\n\n";
+      stop();
+      return true;
+    }
+    else
+    {
+      m_evQue.clear();
+      //m_antMessenger->clearRxQueue();
+      m_antMessenger->ANT_ResetSystem();
+      m_antMessenger->ANT_ResetSystem();
+      changeStateSafe(ST_ANTFS_START0);
+    }
   }
   if(state==ST_ANTFS_START0)
   {
@@ -333,7 +368,12 @@ AntFr310XT::handleEvents()
   {
     AntMessage m;
     //CHECK_RETURN_FALSE(m_antMessenger->waitForBroadcastDataAvail(chan, &m, 20000));//link beacon
-    CHECK_RETURN_FALSE(m_antMessenger->waitForBroadcast(chan, &m, 20000));//link beacon
+    if(!m_antMessenger->waitForBroadcast(chan, &m, 20000))  //link beacon
+    {
+      LOG(LOG_RAW) << "\n\nNo device available for linking!\n\n\n";
+      return false;
+    }
+
     M_ANTFS_Beacon* beacon(reinterpret_cast<M_ANTFS_Beacon*>(&m.getPayloadRef()[1]));
     // TODO:handle case of no available data
     if(!beacon->dataAvail)
@@ -349,13 +389,13 @@ AntFr310XT::handleEvents()
     uchar  transType=0;
     CHECK_RETURN_FALSE(m_antMessenger->ANT_GetChannelId(chan, &devNum, &devId, &transType, 1000));
     LOG(LOG_RAW) << "\n\nFound device devNum=0x" << toString<ushort>(devNum) << " devId=0x" << toString<uint>(devId,2,'0') << " transType=0x" << toString<uint>(transType,2,'0') << "\n\n\n";
-    GarminProducts prod;
-    if(guessDeviceType(devNum, devId, transType, &prod))
-    {
-      if(prod==GarminFR310XT) { LOG(LOG_INF) << "guessed: GarminFR310XT\n\n\n"; }
-      if(prod==GarminFR405) { LOG(LOG_INF) << "guessed: GarminFR405\n\n\n"; }
-    }
-    else { LOG(LOG_WARN) << "guessing failed!\n"; }
+    //GarminProducts prod;
+    //if(guessDeviceType(devNum, devId, transType, &prod))
+    //{
+    //  if(prod==GarminFR310XT) { LOG(LOG_INF) << "guessed: GarminFR310XT\n\n\n"; }
+    //  if(prod==GarminFR405) { LOG(LOG_INF) << "guessed: GarminFR405\n\n\n"; }
+    //}
+    //else { LOG(LOG_WARN) << "guessing failed!\n"; }
 
     CHECK_RETURN_FALSE(m_antMessenger->ANTFS_Link(chan, fsFreq, beaconPer, hostSN));
 
@@ -367,7 +407,6 @@ AntFr310XT::handleEvents()
     m_antMessenger->ANT_CloseChannel(chan);
     sleepms(800);
     changeStateSafe(ST_ANTFS_RESTART);
-    return true;
   }
   else if(state == ST_ANTFS_AUTH0_SN)
   {
@@ -382,13 +421,14 @@ AntFr310XT::handleEvents()
 
     //CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->waitForBroadcast(chan));
 
-    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_RequestClientDeviceSerialNumber(chan, hostSN, clientSN, clientDevName));
+    CHECK_RETURN_FALSE_LOG_OK_DBG2(m_antMessenger->ANTFS_RequestClientDeviceSerialNumber(chan, hostSN, clientSN, clientDevName));
 
     LOG(LOG_RAW) << "\n\nFound client \"" << clientDevName << "\" SN=0x" << toString<uint>(clientSN,8,'0') << " SN=" << clientSN << "\n\n\n";
 
     m_ds.reset(new DeviceSettings(toStringDec<uint>(clientSN).c_str()));
     assert(m_ds.get());
     m_ds->loadDefaultValues();
+    LOG_VAR(m_ds->getConfigFileName());
     m_ds->loadFromFile(m_ds->getConfigFileName());
     m_ds->saveToFile(m_ds->getConfigFileName());
     m_serial->setWriteDelay(m_ds->SerialWriteDelayMs);
@@ -412,19 +452,14 @@ AntFr310XT::handleEvents()
     }
     writeUInt64(clientSN, pairedKey);
 
-    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
+    CHECK_RETURN_FALSE_LOG_OK_DBG2(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
 
     //changeStateSafe(ST_ANTFS_LAST);
     changeStateSafe(ST_ANTFS_AUTH1_PASS);
   }
-  else if(state == ST_ANTFS_AUTH1_PAIR)
-  {
-    //FIXME:
-    //m_antMessenger->ANTFS_Pairing(chan, hostSN, );
-  }
   else if(state == ST_ANTFS_AUTH1_PASS)
   {
-    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
+    CHECK_RETURN_FALSE_LOG_OK_DBG2(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
 
     if(!m_antMessenger->ANTFS_Authenticate(chan, hostSN, pairedKey))
     {
@@ -435,9 +470,11 @@ AntFr310XT::handleEvents()
     LOG(LOG_RAW) << "\n\nClient authenticated successfully!\n\n\n";
 
     // channel status <>
-    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
+    CHECK_RETURN_FALSE_LOG_OK_DBG2(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
 
-    if(mode==MD_DOWNLOAD_ALL || mode==MD_DIRECTORY_LISTING)
+    if(clientDevName=="Forerunner 405")
+      changeStateSafe(ST_ANTFS_GINTF_DL_CAPS);
+    else if(mode==MD_DOWNLOAD_ALL || mode==MD_DIRECTORY_LISTING)
       changeStateSafe(ST_ANTFS_DL_DIRECTORY);
     else if(mode==MD_DOWNLOAD_SINGLE_FILE)
       changeStateSafe(ST_ANTFS_DL_SINGLE_FILE);
@@ -492,17 +529,20 @@ AntFr310XT::handleEvents()
     for(size_t i=0; i<zfc.waypointsFiles.size() && fileCnt<m_ds->MaxFileDownloads; i++)
     {
       checkForExit();
-      LOG_VAR3(fileCnt, m_ds->MaxFileDownloads, zfc.waypointsFiles.size());
+      //LOG_VAR3(fileCnt, m_ds->MaxFileDownloads, zfc.waypointsFiles.size());
       ushort fileIdx = zfc.waypointsFiles[i];
       time_t t       = GarminConvert::gOffsetTime(zfc.getFitFileTime(fileIdx));
-      if(t < m_ds->LastUserProfileTime)
+      //LOG_VAR2(DeviceSettings::time2str(t), DeviceSettings::time2str(zfc.getFitFileTime(fileIdx)));
+      if(t < m_ds->LastTransferredTime)
       {
         logger() << "Skipping waypoints file 0x" << toString<ushort>(fileIdx,4,'0')
                  << "@" << DeviceSettings::time2str(t) << " older than "
-                 << DeviceSettings::time2str(m_ds->LastUserProfileTime) <<  "\n";
+                 << DeviceSettings::time2str(m_ds->LastTransferredTime) <<  "\n";
         continue;
       }
-      logger() << "Transfer waypoints file 0x" << hex << fileIdx << "\n";
+      logger() << "Transfer waypoints file 0x" << toString<ushort>(fileIdx,4,'0')
+               << "@" << DeviceSettings::time2str(t) << " newer than "
+               << DeviceSettings::time2str(m_ds->LastTransferredTime) <<  "\n";
 
       std::vector<uchar> data;
       if(!m_antMessenger->ANTFS_Download(chan, fileIdx, data))
@@ -512,7 +552,7 @@ AntFr310XT::handleEvents()
       }
       LOG(LOG_RAW) << "\n\nDownloaded file idx=" << toString<ushort>(fileIdx,4,'0') << "\n\n\n";
       AntFsFile file0; file0.bytes=data; file0.saveToFile((folder+toString(fileIdx, 4, '0')+".fit").c_str());
-      LOG_VAR(file0.checkCrc());
+      //LOG_VAR(file0.checkCrc());
 
       fit.parse(data, gpx);
 
@@ -527,17 +567,20 @@ AntFr310XT::handleEvents()
     for (size_t i=0; i<zfc.activityFiles.size() && fileCnt<m_ds->MaxFileDownloads; i++)
     {
       checkForExit();
-      LOG_VAR3(fileCnt, m_ds->MaxFileDownloads, zfc.activityFiles.size());
+      //LOG_VAR3(fileCnt, m_ds->MaxFileDownloads, zfc.activityFiles.size());
       ushort fileIdx = zfc.activityFiles[i];
       time_t t       = GarminConvert::gOffsetTime(zfc.getFitFileTime(fileIdx));
-      if(t < m_ds->LastUserProfileTime)
+      //LOG_VAR2(DeviceSettings::time2str(t), DeviceSettings::time2str(zfc.getFitFileTime(fileIdx)));
+      if(t < m_ds->LastTransferredTime)
       {
         logger() << "Skipping activity file 0x" << toString<ushort>(fileIdx,4,'0')
                  << "@" << DeviceSettings::time2str(t) << " older than "
-                 << DeviceSettings::time2str(m_ds->LastUserProfileTime) <<  "\n";
+                 << DeviceSettings::time2str(m_ds->LastTransferredTime) <<  "\n";
         continue;
       }
-      logger() << "# Transfer activity file 0x" << hex << fileIdx << "\n";
+      logger() << "# Transfer activity file 0x" << toString<ushort>(fileIdx,4,'0')
+               << "@" << DeviceSettings::time2str(t) << " newer than "
+               << DeviceSettings::time2str(m_ds->LastTransferredTime) <<  "\n";
 
       std::vector<uchar> data;
       if(!m_antMessenger->ANTFS_Download(chan, fileIdx, data))
@@ -553,13 +596,13 @@ AntFr310XT::handleEvents()
       time_t fitDate=0;
       if(!FIT::getCreationDate(data, fitDate))
       {
-        LOG_VAR3(fitDate, t, m_ds->LastUserProfileTime);
+        //LOG_VAR3(fitDate, t, m_ds->LastUserProfileTime);
         fitDate = t;
       }
       else
       {
         fitDate = GarminConvert::gOffsetTime(fitDate);
-        LOG_VAR3(DeviceSettings::time2str(fitDate), DeviceSettings::time2str(t), DeviceSettings::time2str(m_ds->LastUserProfileTime));
+        //LOG_VAR3(DeviceSettings::time2str(fitDate), DeviceSettings::time2str(t), DeviceSettings::time2str(m_ds->LastUserProfileTime));
       }
       //m_ds->mergeLastUserProfileTime(fitDate); // can't update it in the middle of the loop
 
@@ -569,17 +612,20 @@ AntFr310XT::handleEvents()
     for (size_t i=0; i<zfc.courseFiles.size() && fileCnt<m_ds->MaxFileDownloads; i++)
     {
       checkForExit();
-      LOG_VAR3(fileCnt, m_ds->MaxFileDownloads, zfc.courseFiles.size());
+      //LOG_VAR3(fileCnt, m_ds->MaxFileDownloads, zfc.courseFiles.size());
       ushort fileIdx = zfc.courseFiles[i];
       time_t t       = GarminConvert::gOffsetTime(zfc.getFitFileTime(fileIdx));
-      if(t < m_ds->LastUserProfileTime)
+      //LOG_VAR2(DeviceSettings::time2str(t), DeviceSettings::time2str(zfc.getFitFileTime(fileIdx)));
+      if(t < m_ds->LastTransferredTime)
       {
         logger() << "Skipping course file 0x" << toString<ushort>(fileIdx,4,'0')
                  << "@" << DeviceSettings::time2str(t) << " older than "
-                 << DeviceSettings::time2str(m_ds->LastUserProfileTime) <<  "\n";
+                 << DeviceSettings::time2str(m_ds->LastTransferredTime) <<  "\n";
         continue;
       }
-      logger() << "Transfer course file 0x" << hex << fileIdx << "\n";
+      logger() << "Transfer course file 0x" << toString<ushort>(fileIdx,4,'0')
+               << "@" << DeviceSettings::time2str(t) << " older than "
+               << DeviceSettings::time2str(m_ds->LastTransferredTime) <<  "\n";
 
       std::vector<uchar> data;
       if(!m_antMessenger->ANTFS_Download(chan, fileIdx, data))
@@ -638,6 +684,27 @@ AntFr310XT::handleEvents()
 
     LOG(LOG_RAW) << "\n\nErased file idx=" << toString<ushort>(singleFileIdx,4,'0') << "\n\n\n";
 
+    changeStateSafe(ST_ANTFS_LAST);
+  }
+  else if(state==ST_ANTFS_GINTF_DL_CAPS)
+  {
+    // when authentication succeeds, State=Transport beacon arrives
+    //R  96.026 MESG_BROADCAST_DATA_ID chan=0x00 ANTFS_BEACON(0x43) Beacon=1Hz, pairing=disabled, upload=disabled, dataAvail=no, State=Transport, Auth=PasskeyAndPairingOnly
+    //R 124.999 MESG_BROADCAST_DATA_ID chan=0x00 ANTFS_BEACON(0x43) Beacon=1Hz, pairing=disabled, upload=disabled, dataAvail=no, State=Transport, Auth=PasskeyAndPairingOnly
+    //S 114.743 MESG_REQUEST_ID chan=0x00 reqMsgId=MESG_CHANNEL_STATUS_ID
+    //R   3.247 MESG_CHANNEL_STATUS_ID chan=00 chanSt=Tracking
+    //S  12.451 MESG_BURST_DATA_ID chan=0x00, seq=0, last=no  ANTFS_CMD(0x44) ANTFS_CmdDirect fd=0xffff, offset=0x0000, data=0x0000
+    //R   1.546 MESG_BROADCAST_DATA_ID chan=0x00 ANTFS_BEACON(0x43) Beacon=1Hz, pairing=disabled, upload=disabled, dataAvail=no, State=Transport, Auth=PasskeyAndPairingOnly
+    //S   2.477 MESG_BURST_DATA_ID chan=0x00, seq=1, last=yes fe00000000000000 ........
+
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(0xfe00000000000000)));
+
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(0x06000200ff000000)));
+
+    // 06000200f8000000
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(0x06000200f8000000)));
+
+    // just exit
     changeStateSafe(ST_ANTFS_LAST);
   }
   else if(state==ST_ANTFS_NODATA)

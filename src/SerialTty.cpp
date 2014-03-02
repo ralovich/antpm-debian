@@ -227,7 +227,7 @@ SerialTty::SerialTty()
 
 SerialTty::~SerialTty()
 {
-  //printf("%s\n", __FUNCTION__);
+  lprintf(LOG_DBG2, "%s\n", __FUNCTION__);
 }
 
 #define ENSURE_OR_RETURN_FALSE(e)                           \
@@ -280,10 +280,10 @@ SerialTty::open()
   if(m_p->m_fd<0)
   {
     char se[256];
-    strerror_r(m_p->m_fd, se, sizeof(se));
+    char* ss = strerror_r(m_p->m_fd, se, sizeof(se));
     LOG(antpm::LOG_ERR) << "Opening serial port failed! Make sure cp210x kernel module is loaded, and /dev/ttyUSBxxx was created by cp210x!\n"
                         << "\tAlso make sure that /dev/ttyUSBxxx is R+W accessible by your user (usually enabled through udev.rules)!\n";
-    LOG(antpm::LOG_ERR) << "error=" << m_p->m_fd << ", strerror=" << se << "\n";
+    LOG(antpm::LOG_ERR) << "error=" << m_p->m_fd << ", strerror=" << ss << "\n";
     return rv;
   }
 
@@ -318,7 +318,10 @@ SerialTty::close()
 {
   m_p->m_recvThKill = 1;
 
-  m_p->m_condQueue.notify_all();
+  {
+    boost::unique_lock<boost::mutex> lock(m_p->m_queueMtx);
+    m_p->m_condQueue.notify_all();
+  }
 
   m_p->m_recvTh.join();
 

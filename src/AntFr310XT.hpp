@@ -47,7 +47,9 @@ public:
   virtual void onAntSent(const AntMessage m);
 
   void start();
+protected:
   void stop();
+public:
   void stopAsync();
 
   const int getSMState() const;
@@ -64,6 +66,7 @@ protected:
   int state;
   boost::mutex stateMtx;
   volatile int m_eventThKill;
+  int m_restartCount;
   boost::thread m_eventTh;
   lqueue4<AntMessage> m_evQue;
   AntParsedLoggerCallback aplc;

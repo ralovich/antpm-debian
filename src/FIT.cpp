@@ -1206,7 +1206,7 @@ bool FIT::parseZeroFile(vector<uint8_t> &data, ZeroFileContent &zeroFileContent)
       return false;
     }
 
-    logger() << uppercase;
+    //logger() << uppercase;
 
     logger() << "_idx" << "|d" << "ata" << "type|" << "recordType|" << "_rt_" << "++ID++" << "__fileSize|" << "+++++++++++++++++++|" << "flags" << "\n";
     uint8_t *ptr = &data.front();
@@ -1239,7 +1239,7 @@ bool FIT::parseZeroFile(vector<uint8_t> &data, ZeroFileContent &zeroFileContent)
     for(size_t i = 0; i < zeroFileContent.zfRecords.size(); i++)
     {
       ZeroFileRecord& zfRecord(zeroFileContent.zfRecords[i]);
-      logger() << hex << setw(4) << setfill('0') << (unsigned)zfRecord.index << ": " <<
+      LOG(LOG_DBG2) << hex << setw(4) << setfill('0') << (unsigned)zfRecord.index << ": " <<
                   GarminConvert::localTime(zfRecord.timeStamp) << "\n";
       switch(zfRecord.recordType)
       {

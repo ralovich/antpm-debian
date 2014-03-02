@@ -48,6 +48,16 @@ AntChannel::onMsg(AntMessage &m)
   }
 }
 
+void
+AntChannel::interruptWait()
+{
+  boost::unique_lock<boost::mutex> lock(m_mtxListeners);
+  for(std::list<AntListenerBase*>::iterator i = listeners.begin(); i != listeners.end(); i++)
+  {
+    (*i)->interruptWait();
+  }
+}
+
 
 
 
@@ -78,24 +88,38 @@ AntListenerBase::onMsg(AntMessage& m)
   }
 }
 
+void
+AntListenerBase::interruptWait()
+{
+  boost::unique_lock<boost::mutex> lock(m_mtxResp);
+  m_msgResp.reset();
+  m_cndResp.notify_all(); // intentionally generate a "spurious" wakeup
+}
+
 bool
 AntListenerBase::waitForMsg(AntMessage* m, const size_t timeout_ms)
 {
   boost::unique_lock<boost::mutex> lock(m_mtxResp);
-  if(m_msgResp)
+  if(m_msgResp) // it had already arrived
   {
-    if(m) *m = *m_msgResp; // it had already arrived
+    if(m) *m = *m_msgResp;
     m_msgResp.reset();
     return true;
   }
   if(!m_cndResp.timed_wait(lock, boost::posix_time::milliseconds(timeout_ms)))
   {
+    // false means, timeout was reached
     return false;
   }
-  assert(m_msgResp);
-  if(m) *m=*m_msgResp;//copy
-  m_msgResp.reset();
-  return true;
+  // true means, either notification OR spurious wakeup!!
+  //assert(m_msgResp); // this might fail for spurious wakeups!!
+  if(m_msgResp)
+  {
+    if(m) *m=*m_msgResp;//copy
+    m_msgResp.reset();
+    return true;
+  }
+  return false;
 }
 
 
@@ -110,7 +134,8 @@ AntEvListener::match(AntMessage& other) const
 {
   return other.getMsgId()==MESG_RESPONSE_EVENT_ID
       && owner.chan == other.getPayloadRef()[0]
-      && other.getPayloadRef()[1]==MESG_EVENT_ID;
+      && other.getPayloadRef()[1]==MESG_EVENT_ID
+      && other.getPayloadRef()[2]!=EVENT_TRANSFER_TX_START; // let us not consider EVENT_TRANSFER_TX_START events
 }
 // whether there was a response before timeout
 bool
@@ -231,10 +256,18 @@ AntBurstListener::waitForBursts(std::list<AntMessage>& bs, const size_t timeout_
   }
   // TODO: handle arrival of event:EVENT_RX_FAIL
   if(!m_cndResp.timed_wait(lock, boost::posix_time::milliseconds(timeout_ms)))
+  {
+    // // false means, timeout was reached
     return false;
-  assert(!bursts.empty());
-  std::swap(bs, bursts);
-  return true;
+  }
+  // true means, either notification OR spurious wakeup!!
+  //assert(!bursts.empty()); // this might fail for spurious wakeups!!
+  if(!bursts.empty())
+  {
+    std::swap(bs, bursts);
+    return true;
+  }
+  return false;
 }
 
 
@@ -298,7 +331,7 @@ AntBurstListener::collectBurst(std::vector<uint8_t>& burstData, const size_t tim
     lprintf(LOG_ERR, "couldn't reconstruct burst data transmission before timeout\n"); fflush(stdout);
     return false;
   }
-  lprintf(LOG_INF, "collectBurst: %d bytes\n", int(burstData.size()));
+  lprintf(LOG_DBG, "collectBurst: %d bytes\n", int(burstData.size()));
   return true;
 }
 
