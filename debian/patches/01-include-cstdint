@@ -1,0 +1,24 @@
+Description: include cstdint
+ Include cstdint to fix FTBFS.
+ .
+ antpm (1.16-1) UNRELEASED; urgency=low
+ .
+   [ RALOVICH, Kristof ]
+   * Merge tag 'upstream/20140302'
+   * debian/copyright: document removal of GPLv2 only code
+Author: Kristof Ralovich <ralovich@in.tum.de>
+
+---
+Last-Update: 2014-03-03
+
+--- a/src/stdintfwd.hpp
++++ b/src/stdintfwd.hpp
+@@ -19,7 +19,7 @@
+ 
+ #ifndef _MSC_VER // [
+ 
+-//#include <cstdint>
++#include <cstdint>
+ //#error "Use this header only with Microsoft Visual C++ compilers!"
+ #include <boost/cstdint.hpp>
+ 
