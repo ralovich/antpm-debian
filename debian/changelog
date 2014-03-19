@@ -1,10 +1,12 @@
-antpm (1.16-1) UNRELEASED; urgency=low
+antpm (1.16-1) unstable; urgency=low
+
+  * Team upload
 
   [ RALOVICH, Kristof ]
   * Merge tag 'upstream/20140302'
   * debian/copyright: document removal of GPLv2 only code
 
- -- Kristof Ralovich <ralovich@in.tum.de>  Sun, 02 Mar 2014 11:27:28 +0100
+ -- Christian Perrier <bubulle@debian.org>  Wed, 19 Mar 2014 07:00:02 +0100
 
 antpm (1.15-1) unstable; urgency=low
 
