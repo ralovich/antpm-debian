@@ -30,3 +30,29 @@ Description: ANT+ information retrieval client for Garmin GPS products
  The software was originally named "gant" but renamed when packaged
  to avoid confusion with existing Java software.
 
+
+Package: antpm-dbg
+Section: debug
+Priority: extra
+Architecture: any
+Depends:
+ antpm (= ${binary:Version}),
+ ${misc:Depends},
+Description: ANT+ information retrieval client for Garmin GPS products
+ This software uses the Garmin ANT+ proprietary USB keys and
+ communication protocol to retrieve information (such as GPS traces)
+ from some Garmin Forerunner watches such as Forerunner 405 and 310XT.
+ .
+ The underlying ANT+minus implements the ANT/ANT+/ANT-FS protocols to
+ provide these tools: garmin-ant-downloader, antpm-downloader,
+ antpm-fit2gpx, and antpm-usbmon2ant.
+ .
+ ANT+minus is a userspace implementation of a wire protocol similar
+ to the ANT/ANT+/ANT-FS protocols. The goal is to be able to communicate
+ with any ANT capable device in order to e.g. retrieve sports tracks. The
+ c++ implementation is currently available under both linux and win.
+ Communication with watches other than the 310XT might work, but are
+ untested. Please report your experience to help improving the software. 
+ .
+ The software was originally named "gant" but renamed when packaged
+ to avoid confusion with existing Java software.
