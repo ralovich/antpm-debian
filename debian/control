@@ -9,8 +9,6 @@ Vcs-Git: git://git.debian.org/git/pkg-running/antpm.git
 Vcs-Browser: http://git.debian.org/?p=pkg-running/antpm.git;a=summary
 
 Package: antpm
-Replaces: garmin-ant-downloader (<< 1.12-2)
-Breaks: garmin-ant-downloader (<< 1.12-2)
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libstdc++6 (>=4.4.0)
 Description: ANT+ information retrieval client for Garmin GPS products
@@ -32,10 +30,3 @@ Description: ANT+ information retrieval client for Garmin GPS products
  The software was originally named "gant" but renamed when packaged
  to avoid confusion with existing Java software.
 
-
-Package: garmin-ant-downloader
-Depends: antpm, ${misc:Depends}
-Architecture: all
-Section: oldlibs
-Description: transitional dummy package
- This is a transitional dummy package. It can safely be removed.
