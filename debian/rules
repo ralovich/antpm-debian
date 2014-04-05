@@ -29,7 +29,7 @@ override_dh_auto_build:
 DESTDIR=../debian/antpm/
 override_dh_install:
 	cd cmake-build && $(MAKE) install DESTDIR=$(DESTDIR)
-	mv debian/antpm/usr/bin/gant debian/antpm/usr/bin/garmin-ant-downloader
+	mv debian/antpm/usr/bin/gant debian/antpm/usr/bin/antpm-garmin-ant-downloader
 	dh_installudev 
 
 build:
@@ -37,4 +37,4 @@ build:
 	cp src/antpm-downloader.1 debian/
 	cp src/antpm-fit2gpx.1 debian/
 	cp src/antpm-usbmon2ant.1 debian/
-	cp src/gant/gant.1 debian/garmin-ant-downloader.1
+	cp src/gant/gant.1 debian/antpm-garmin-ant-downloader.1
