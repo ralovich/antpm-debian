@@ -1,0 +1,41 @@
+From ac496ff03df3ecb6fb447021aa5fd66dbe20824d Mon Sep 17 00:00:00 2001
+From: "RALOVICH, Kristof" <tade60@freemail.hu>
+Date: Sat, 5 Apr 2014 11:37:55 +0200
+Subject: [PATCH] gant: try fixing FTBFS under hurd-i386
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+> /«PKGBUILDDIR»/src/gant/antlib.c:415:73: error: 'IUCLC' undeclared (first use in this function)
+---
+ src/gant/antlib.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/gant/antlib.c b/src/gant/antlib.c
+index 26e880f..283eb10 100644
+--- a/src/gant/antlib.c
++++ b/src/gant/antlib.c
+@@ -1,5 +1,11 @@
+ /* copyright 2008 paul@ant.sbrk.co.uk. released under GPLv3 */
+ /* vers 0.6t */
++
++#define _XOPEN_SOURCE 500
++#define _BSD_SOURCE
++#if defined(__GNU__) /* Hurd */
++# define _GNU_SOURCE
++#endif
+ #include <unistd.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
+@@ -9,6 +15,8 @@
+ #include <pthread.h>
+ #include <termios.h>
+ #include <stdlib.h>
++#include <strings.h> /* bzero */
++#include <sys/select.h> /* fd_set */
+ 
+ #define __declspec(X)
+ 
+-- 
+1.8.3.2
+
