@@ -1,3 +1,11 @@
+antpm (1.16-3) UNRELEASED; urgency=low
+
+  [ RALOVICH, Kristof ]
+  * debian/rules: move copies under override_dh_install
+    Closes: #745444
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Thu, 24 Apr 2014 22:02:19 +0200
+
 antpm (1.16-2) unstable; urgency=low
 
   * Team upload
