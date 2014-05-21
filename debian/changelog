@@ -1,9 +1,9 @@
-antpm (1.16-4) UNRELEASED; urgency=low
+antpm (1.16-4) unstable; urgency=low
 
   [ RALOVICH, Kristof ]
   * re-upload after deletion of previous version
 
- -- Kristof Ralovich <ralovich@in.tum.de>  Tue, 20 May 2014 19:23:34 +0200
+ -- Christian Perrier <bubulle@debian.org>  Wed, 21 May 2014 07:06:24 +0200
 
 antpm (1.16-3) unstable; urgency=low
 
