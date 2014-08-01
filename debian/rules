@@ -8,6 +8,9 @@
 export DH_VERBOSE=1
 
 NUMCPUS=$(shell grep -c '^processor' /proc/cpuinfo)
+ifeq ($(NUMCPUS),0)
+		NUMCPUS=1
+endif
 
 CPPFLAGS:=$(shell dpkg-buildflags --get CPPFLAGS)
 CFLAGS:=$(shell dpkg-buildflags --get CFLAGS) $(CPPFLAGS)
