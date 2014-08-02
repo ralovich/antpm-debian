@@ -1,3 +1,11 @@
+antpm (1.16-5) unstable; urgency=low
+
+  [ RALOVICH, Kristof ]
+  * debian/rules: do not call make -j0
+  * debian: patch for kfreebsd builds
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Sat, 02 Aug 2014 16:55:50 +0200
+
 antpm (1.16-4) unstable; urgency=low
 
   [ RALOVICH, Kristof ]
