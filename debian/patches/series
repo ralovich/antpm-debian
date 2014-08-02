@@ -1,3 +1,4 @@
+04-fix-missing-IUCLC.patch
 01-include-cstdint
 02-try-fixing-FTBFS-under-hurd-i386-kfreebsd-amd64-kfre
 03-gant-try-fixing-FTBFS-under-hurd-i386
