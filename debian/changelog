@@ -1,3 +1,11 @@
+antpm (1.16-7) unstable; urgency=low
+
+  [ RALOVICH, Kristof ]
+  * really link against boost_atomic
+    Closes: #757472
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Mon, 11 Aug 2014 11:40:58 +0200
+
 antpm (1.16-6) unstable; urgency=low
 
   [ RALOVICH, Kristof ]
