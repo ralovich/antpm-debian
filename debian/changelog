@@ -8,6 +8,8 @@ antpm (1.16-7) unstable; urgency=low
 
 antpm (1.16-6) unstable; urgency=low
 
+  * Team upload
+
   [ RALOVICH, Kristof ]
   * link against boost_atomic
     Closes: #757472
