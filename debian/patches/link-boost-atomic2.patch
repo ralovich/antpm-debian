@@ -1,0 +1,10 @@
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -126,6 +126,7 @@
+   ${Boost_DATE_TIME_LIBRARY}
+   ${LIBUSB_LIBRARIES}
+   ${Boost_THREAD_LIBRARY}
++  ${Boost_ATOMIC_LIBRARY}
+   ${Boost_SYSTEM_LIBRARY}
+   ${Boost_FILESYSTEM_LIBRARY}
+   stdc++
