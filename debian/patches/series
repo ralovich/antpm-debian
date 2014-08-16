@@ -1,3 +1,4 @@
+gant-no-devname.patch
 link-boost-atomic.patch
 04-fix-missing-IUCLC.patch
 01-include-cstdint
