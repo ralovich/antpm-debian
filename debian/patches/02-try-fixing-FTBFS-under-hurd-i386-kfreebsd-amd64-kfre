@@ -26,8 +26,6 @@ make: *** [build-arch] Error 2
  src/Log.hpp | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/src/Log.hpp b/src/Log.hpp
-index 066b758..f2c1f72 100644
 --- a/src/Log.hpp
 +++ b/src/Log.hpp
 @@ -29,7 +29,7 @@
@@ -35,10 +33,7 @@ index 066b758..f2c1f72 100644
  # include <io.h>
  #endif
 -#ifdef __linux__
-+#if defined(__linux__) || defined(__GNU__) || defined(__FreeBSD__)
++#if defined(__linux__) || defined(__GNU__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
  # include <unistd.h>
  #endif
  #include <iostream>
--- 
-1.8.3.2
-
