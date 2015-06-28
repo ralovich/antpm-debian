@@ -1,3 +1,14 @@
+antpm (1.16-9) unstable; urgency=low
+
+  * Team upload
+
+  [ RALOVICH, Kristof ]
+  * Remove timestamp macro from source code to make package build reproducible.
+    Original patch from Dhole <dhole@openmailbox.org>.
+    Closes: #788754
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Sun, 28 Jun 2015 12:58:40 +0200
+
 antpm (1.16-8) unstable; urgency=low
 
   * Team upload
