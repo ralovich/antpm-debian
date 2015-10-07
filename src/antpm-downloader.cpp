@@ -24,7 +24,6 @@
 
 #include "AntMessage.hpp"
 #include "AntFr310XT.hpp"
-#include "AntFr405.hpp"
 #include "common.hpp"
 #include "Log.hpp"
 
@@ -147,7 +146,11 @@ main(int argc, char** argv)
   uint16_t eraseFileIdx   = 0x0000;
   int      verbosityLevel = antpm::Log::instance()->getLogReportingLevel();
   po::options_description desc("Allowed options");
-  desc.add_options()
+  std::vector<const char*> args(argv, argv+argc);
+  po::variables_map vm;
+  try
+  {
+    desc.add_options()
     ("help,h",                                                                    "produce help message")
     ("pairing,P", po::value<bool>(&pairing)->zero_tokens()->implicit_value(true), "Force pairing first")
     ("dir-only",  po::value<bool>(&dirOnly)->zero_tokens()->implicit_value(true), "Download and list device directory")
@@ -157,10 +160,6 @@ main(int argc, char** argv)
     ("version,V",                                               "Print version information")
     ;
 
-  std::vector<const char*> args(argv, argv+argc);
-  po::variables_map vm;
-  try
-  {
     //po::parsed_options parsed = po::parse_command_line(argc, argv, desc);
     po::parsed_options parsed = po::command_line_parser(argc, argv).options(desc).run();
     po::store(parsed, vm);
@@ -183,6 +182,17 @@ main(int argc, char** argv)
   catch(po::error& error)
   {
     cerr << error.what() << "\n";
+    cerr << desc << "\n";
+    return EXIT_FAILURE;
+  }
+  catch(boost::exception& e)
+  {
+    cerr << boost::diagnostic_information(e) << std::endl;
+    return EXIT_FAILURE;
+  }
+  catch(std::exception& ex)
+  {
+    cerr << ex.what() << "\n";
     cerr << desc << "\n";
     return EXIT_FAILURE;
   }
@@ -214,28 +224,8 @@ main(int argc, char** argv)
     LOG(antpm::LOG_DBG2) << "\targv[" << i << "]\t\"" << argv[i] << "\"" << endl;
   }
 
-  char* ANTPM_405 = getenv("ANTPM_405");
-  if(ANTPM_405!=NULL && strncmp("1",ANTPM_405,1)==0)
   {
-    logger() << "\n\nApplying ANTPM_405 override mode!\n\n\n";
-    AntFr405 watch2(false);
-    stopFunc = boost::bind(&AntFr405::stopAsync, &watch2);
-    {
-      watch2.setModeDownloadAll();
-      if(pairing) watch2.setModeForcePairing();
-      if(dirOnly) watch2.setModeDirectoryListing();
-      else if(dlFileIdx!=0x0000) watch2.setModeDownloadSingleFile(dlFileIdx);
-      else if(eraseFileIdx!=0x000) watch2.setModeEraseSingleFile(eraseFileIdx);
-
-      watch2.start();
-
-
-      watch2.stop();
-    }
-  }
-  else
-  {
-    AntFr310XT watch2(false);
+    AntFr310XT watch2;
     stopFunc = boost::bind(&AntFr310XT::stopAsync, &watch2);
     {
       watch2.setModeDownloadAll();
@@ -244,7 +234,7 @@ main(int argc, char** argv)
       else if(dlFileIdx!=0x0000) watch2.setModeDownloadSingleFile(dlFileIdx);
       else if(eraseFileIdx!=0x000) watch2.setModeEraseSingleFile(eraseFileIdx);
 
-      watch2.start();
+      watch2.run();
 
 
       //watch2.stop();

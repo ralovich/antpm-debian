@@ -56,11 +56,11 @@ struct AntMessenger_Recevier
 };
 
 
-AntMessenger::AntMessenger(bool eventLoopInBgTh)
+AntMessenger::AntMessenger()
   : m_io(0)
   , m_cb(0)
   , m_packerThKill(0)
-  , m_rpackQueue2(eventLoopInBgTh)
+  , m_rpackQueue2()
 {
   m_packerThKill = 0;
   AntMessenger_Recevier msgTh;
@@ -77,6 +77,7 @@ AntMessenger::AntMessenger(bool eventLoopInBgTh)
 
 AntMessenger::~AntMessenger()
 {
+  m_rpackQueue2.setOnDataArrivedCallback(0);
   m_packerThKill = 1;
   m_packerTh.join();
   m_io=0;
@@ -646,7 +647,7 @@ AntMessenger::ANTFS_Download( const uchar chan, const ushort file, std::vector<u
 
     if(dlIter==0) fileSize = resp->fileSize;
     //fprintf(loggerc(), "fileSize = %u = 0x%08x\n", (uint)fileSize, (uint)fileSize);
-    CHECK_RETURN_FALSE(fileSize == resp->fileSize);
+    ASSURE_EQ_RET_FALSE(fileSize, resp->fileSize);
     //fprintf(loggerc(), "nextOffset = %u = 0x%08x\n", (uint)nextOffset, (uint)nextOffset);
     //logger() << std::dec;
     //LOG_VAR(fileSize);
@@ -769,8 +770,8 @@ AntMessenger::ANTFS_RequestClientDeviceSerialNumber(const uchar chan, const uint
 
   const M_ANTFS_Response* cmdResp(reinterpret_cast<const M_ANTFS_Response*>(&burstData[8]));
   sn = cmdResp->detail.authenticateResponse.sn;
-  uchar lenDevName=cmdResp->detail.authenticateResponse.authStrLen;
-  CHECK_RETURN_FALSE_LOG_OK_DBG2(lenDevName==16);
+  uchar lenDevName=cmdResp->detail.authenticateResponse.authStrLen; // 16 for 310XT, 14 for 410
+  CHECK_RETURN_FALSE_LOG_OK_DBG2(lenDevName>0);
 
   devName = std::string(reinterpret_cast<const char*>(&burstData[16]), lenDevName);
 
@@ -783,7 +784,7 @@ AntMessenger::ANTFS_RequestClientDeviceSerialNumber(const uchar chan, const uint
 
 
 bool
-AntMessenger::ANTFS_Direct(const uchar chan, const uint64_t code)
+AntMessenger::ANTFS_Direct(const uchar chan, const uint64_t code, std::vector<uint8_t>& bytes)
 {
   M_ANTFS_Command_Direct cmd;
   cmd.commandId = ANTFS_CommandResponseId;
@@ -840,6 +841,8 @@ AntMessenger::ANTFS_Direct(const uchar chan, const uint64_t code)
 
   logger() << "got back = \"" << burstData.size() << "\" bytes\n";
 
+  bytes = burstData;
+
   CHECK_RETURN_FALSE_LOG_OK(burstData.size()==size_t((2+resp->detail.directResponse.data)*8));
 
   CHECK_RETURN_FALSE_LOG_OK(ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
@@ -851,6 +854,7 @@ AntMessenger::ANTFS_Direct(const uchar chan, const uint64_t code)
 void AntMessenger::eventLoop()
 {
   m_rpackQueue2.eventLoop();
+  lprintf(LOG_DBG2, "~%s\n", __FUNCTION__);
 }
 
 void AntMessenger::kill()
@@ -995,7 +999,8 @@ AntMessenger::sendAckData(const uchar chan, const uchar data[8], const size_t ti
 }
 
 
-// interpret byte stream, assemble packets and store results in \a m_rpackQueue
+/// interpret byte stream, assemble packets and store results in \a m_rpackQueue
+/// Also, forward messages with onAntReceived()
 bool
 AntMessenger::assemblePackets(std::list<uchar>& q)
 {
@@ -1027,10 +1032,6 @@ AntMessenger::assemblePackets(std::list<uchar>& q)
     }
     m.timestamp = boost::get_system_time();
     m.idx = packetIdx++;
-    //{
-    //  boost::unique_lock<boost::mutex> lock(m_rpackMutex);
-    //  m_rpackQueue.push_back(m);
-    //}
     m_rpackQueue2.push(m);
     if(m_cb)
     {
@@ -1043,7 +1044,10 @@ AntMessenger::assemblePackets(std::list<uchar>& q)
   return true;
 }
 
-bool AntMessenger::onMessage(std::vector<AntMessage> v)
+
+/// Called from m_rpackQueue2.eventLoop()
+bool
+AntMessenger::onMessage(std::vector<AntMessage> v)
 {
   //TODO: don't presort here, but call onMsg for all incoming packets
 
@@ -1152,7 +1156,8 @@ AntMessenger::interruptWait()
 }
 
 
-// receive bytes from the serial interface
+/// Receive bytes from the serial interface, assemble ANT packets,
+/// forward the ANT packets.
 void*
 AntMessenger::th_messageHandler()
 {
@@ -1185,6 +1190,7 @@ AntMessenger::th_messageHandler()
   {
     lprintf(antpm::LOG_WARN, "%d remaining uninterpreted bytes\n", (int)q.size());
   }
+  lprintf(LOG_DBG2, "~%s\n", __FUNCTION__);
   return NULL;
 }
 

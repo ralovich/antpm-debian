@@ -33,14 +33,25 @@
 #include <algorithm>
 #include <vector>
 #include <string>
-#include <boost/thread/thread_time.hpp>
 
+#include <boost/version.hpp>
+#include <boost/thread/thread_time.hpp>
 #include <boost/filesystem.hpp>
 
 #include "Log.hpp"
 #include "common.hpp"
 #include "DeviceSettings.hpp"
 
+#include <pwd.h>
+#include <grp.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#ifndef IUCLC
+# define IUCLC 0
+#endif
 
 namespace fs = boost::filesystem;
 using namespace std;
@@ -65,6 +76,7 @@ struct SerialTtyPrivate
 // runs in other thread
 struct SerialTtyIOThread
 {
+  SerialTtyIOThread() : rv(NULL) {}
   void operator() (SerialTty* arg)
   {
     //printf("recvFunc, arg: %p\n", arg); fflush(stdout);
@@ -89,10 +101,56 @@ find_file_starts_with(const fs::path & dir,
   for( fs::directory_iterator dir_iter(dir) ; dir_iter != end_iter ; ++dir_iter)
   {
     fs::path p = *dir_iter;
+/// from http://www.boost.org/doc/libs/1_49_0/libs/filesystem/v2/doc/index.htm
+
+/// Version 3, a major revision with many new and improved features,
+/// is also available. Version 3 may break some user code written for
+/// Version 2.
+
+// To ease the transition, Boost releases 1.44 through 1.47 will
+// supply both V2 and V3. Version 2 is the default version for Boost
+// release 1.44 and 1.45. Version 3 will be the default starting with
+// release 1.46.
+
+// Define macro BOOST_FILESYSTEM_VERSION as 3 to use Version 3. This
+// will be the default for release 1.46 and later.
+
+// Define macro BOOST_FILESYSTEM_VERSION as 2 to use Version 2. This
+// is the default for release 1.44 and 1.45.
+
+// You may define the BOOST_FILESYSTEM_VERSION macro:
+
+
+// On the build command line; the exact format depends on your
+// compiler or IDE
+
+
+// In your code, before including any filesystem header, #define
+// BOOST_FILESYSTEM_VERSION n
+
+
+// #define BOOST_FILESYSTEM_VERSION n in boost/config/user.hpp. Note
+// #that this approach applies to all uses of Boost.Filesystem.
+
+// Existing code should be moved to version 3 as soon as
+// convenient. New code should be written for version 3.
+
+// Version 2 is deprecated, and will not be included in Boost releases
+// 1.48 and later.
+
+#if (((BOOST_VERSION/100000)==1) && (((BOOST_VERSION / 100) % 1000)<44)) // BOOST_FILESYSTEM_VERSION==2
+    if(std::string(p.leaf()).find(start)==0)
+    {
+      return std::string(p.leaf());
+    }
+#elif BOOST_FILESYSTEM_VERSION==3
     if(p.leaf().string().find(start)==0)
     {
       return p.leaf().string();
     }
+#else
+# error "Unsupported boost filesystem version" ##BOOST_FILESYSTEM_VERSION
+#endif
   }
   return "";
 }
@@ -115,7 +173,9 @@ SerialTtyPrivate::guessDeviceName(vector<string> &guessedNames)
   std::ifstream mods("/proc/modules");
   bool cp210x_found=false;
   if(!mods.is_open())
+  {
     LOG(LOG_WARN) << "Could not open /proc/modules!\n";
+  }
   else
   {
     while (mods.good())
@@ -126,9 +186,13 @@ SerialTtyPrivate::guessDeviceName(vector<string> &guessedNames)
     }
     mods.close();
     if(cp210x_found)
+    {
       LOG(LOG_DBG) << "Found loaded cp210x kernel module, good.\n";
+    }
     else
+    {
       LOG(LOG_WARN) << "cp210x is not listed among loaded kernel modules!\n";
+    }
   }
   // check for usb ids inside /sys/bus/usb/devices/N-N/idProduct|idVendor
 
@@ -137,7 +201,9 @@ SerialTtyPrivate::guessDeviceName(vector<string> &guessedNames)
   // check /sys/bus/usb/drivers/cp210x/6-2:1.0/interface for "Dynastream ANT2USB"
   const char* driverDir="/sys/bus/usb/drivers/cp210x";
   if(!folderExists(driverDir))
+  {
     LOG(LOG_WARN) << driverDir << " doesn't exist!\n";
+  }
   else
   {
     LOG(LOG_DBG) << "Detecting in " << driverDir << " ...\n";
@@ -193,12 +259,41 @@ SerialTtyPrivate::guessDeviceName(vector<string> &guessedNames)
 }
 
 
+void
+getFileMode(const char* fname)
+{
+  struct stat fileStat;
+  struct group *grp;
+  struct passwd *pwd;
+
+  if(stat(fname,&fileStat) == 0)
+  {
+    grp = getgrgid(fileStat.st_gid);
+    pwd = getpwuid(fileStat.st_uid);
+
+    LOG(LOG_DBG) << fname << ": \t";
+    LOG(LOG_RAW) << pwd->pw_name << ":" << grp->gr_name << "\t";
+    LOG(LOG_RAW) << ((S_ISLNK(fileStat.st_mode)) ? "l" : ((S_ISDIR(fileStat.st_mode)) ? "d" : "-"));
+    LOG(LOG_RAW) << ((fileStat.st_mode & S_IRUSR) ? "r" : "-");
+    LOG(LOG_RAW) << ((fileStat.st_mode & S_IWUSR) ? "w" : "-");
+    LOG(LOG_RAW) << ((fileStat.st_mode & S_IXUSR) ? "x" : "-");
+    LOG(LOG_RAW) << ((fileStat.st_mode & S_IRGRP) ? "r" : "-");
+    LOG(LOG_RAW) << ((fileStat.st_mode & S_IWGRP) ? "w" : "-");
+    LOG(LOG_RAW) << ((fileStat.st_mode & S_IXGRP) ? "x" : "-");
+    LOG(LOG_RAW) << ((fileStat.st_mode & S_IROTH) ? "r" : "-");
+    LOG(LOG_RAW) << ((fileStat.st_mode & S_IWOTH) ? "w" : "-");
+    LOG(LOG_RAW) << ((fileStat.st_mode & S_IXOTH) ? "x\n" : "-\n");
+  }
+}
+
+
 bool
 SerialTtyPrivate::openDevice(vector<string>& names)
 {
   for(size_t i = 0; i < names.size(); i++)
   {
     m_devName = names[i];
+    getFileMode(m_devName.c_str());
     LOG(LOG_INF) << "Trying to open " << m_devName << " ...";
     m_fd = ::open(m_devName.c_str(), O_RDWR | O_NONBLOCK);
     if(m_fd < 0)
@@ -233,10 +328,10 @@ SerialTty::~SerialTty()
 #define ENSURE_OR_RETURN_FALSE(e)                           \
   do                                                        \
   {                                                         \
-    if(-1 == (e))                                           \
+    if((e)<0)                                               \
     {                                                       \
       /*perror(#e);*/                                       \
-      const char* se=strerror(e);                          \
+      const char* se=strerror(errno);                       \
       LOG(antpm::LOG_ERR) << se << "\n";                    \
       return false;                                         \
     }                                                       \
@@ -279,6 +374,11 @@ SerialTty::open()
 
   if(m_p->m_fd<0)
   {
+    // Ofcourse you don't want to be running as root, so add your user to the group dialout like so:
+    //
+    // sudo usermod -a -G dialout yourUserName
+    //
+    // Log off and log on again for the changes to take effect!
     char se[256];
     char* ss = strerror_r(m_p->m_fd, se, sizeof(se));
     LOG(antpm::LOG_ERR) << "Opening serial port failed! Make sure cp210x kernel module is loaded, and /dev/ttyUSBxxx was created by cp210x!\n"

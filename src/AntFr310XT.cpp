@@ -55,8 +55,8 @@ const ushort waveform = 0x5300;
 const uchar fsFreq = 0x46;  // other values seen: 0x46 0x50 0x0f
 const uchar beaconPer = 0x04;
 const uchar fsSearchTimeout = 0x03;
-
-
+const int ANTPM_MAX_RESTARTS = 10;
+const int ANTPM_DELAY_MS_UNHANDLED = 1000;
 
 
 struct AntFr310XT_EventLoop
@@ -76,19 +76,20 @@ struct AntFr310XT_EventLoop
   void* rv;
 };
 
-AntFr310XT::AntFr310XT(bool eventLoopInBgTh)
-  //: m_serial(new ANTPM_SERIAL_IMPL())
-  : m_serial(Serial::instantiate())
-  , m_antMessenger(new AntMessenger(eventLoopInBgTh))
+/// s[in] allocated by "new"
+AntFr310XT::AntFr310XT(Serial *s)
+  : m_serial(s?s:Serial::instantiate())
+  , m_antMessenger(new AntMessenger())
+  , clientState(BUSY)
   , state(ST_ANTFS_0)
   , m_eventThKill(0)
   , m_restartCount(0)
   , aplc(getConfigFolder()+std::string("antparse_")+getDateString()+".txt")
   , clientSN(0)
   , pairedKey(0)
-  , m_eventLoopInBgTh(eventLoopInBgTh)
   , doPairing(false)
   , mode(MD_DOWNLOAD_ALL)
+  , singleFileIdx(0)
 {
   if(!m_serial) return;
   m_antMessenger->setHandler(m_serial.get());
@@ -103,8 +104,10 @@ AntFr310XT::AntFr310XT(bool eventLoopInBgTh)
 
 AntFr310XT::~AntFr310XT()
 {
-  if(m_antMessenger) m_antMessenger->setCallback(0);
-  //m_antMessenger->setHandler(0);
+  if(m_antMessenger)
+  {
+    m_antMessenger->setCallback(0);
+  }
 
   m_eventThKill=1;
   m_eventTh.join();
@@ -170,30 +173,32 @@ AntFr310XT::onAntSent(const AntMessage m)
 
 
 void
-AntFr310XT::start()
+AntFr310XT::run()
 {
   CHECK_RETURN(m_serial);
   CHECK_RETURN(m_serial->isOpen());
-
-  //createDownloadFolder();
-
-  //m_antMessenger->addListener(boost::bind(&AntFr310XT2::listenerFunc2, this, _1));
 
   //m_antMessenger->setCallback(&aplc);
 
   changeState(ST_ANTFS_START0);
 
-  if(!m_eventLoopInBgTh)
-    m_antMessenger->eventLoop();
+  m_antMessenger->eventLoop();
 }
 
-void AntFr310XT::stop()
+/// Stop all processing within the event thread.
+/// Shut down the state machine, resetting it into ST_ANTFS_START0.
+/// Close the serial port.
+/// Must be called from within our event thread itself.
+void
+AntFr310XT::stop()
 {
+  assert(boost::this_thread::get_id() == this->m_eventTh.get_id());
   m_eventThKill = 1;
-  // stop() might be called from the event thread
+  // stop() is called from the event thread
   // terminate called after throwing an instance of 'boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::thread_resource_error> >'
   //   what():  boost thread: trying joining itself: Resource deadlock avoided
   //m_eventTh.join();
+
   m_antMessenger->kill();
   if(m_serial && m_serial->isOpen())
   {
@@ -210,11 +215,15 @@ void AntFr310XT::stop()
 }
 
 
+/// To be called from threads other than our own event thread. Basically the outside world can tell us to tear down.
 void
 AntFr310XT::stopAsync()
 {
+  assert(boost::this_thread::get_id() != this->m_eventTh.get_id());
+
+
   LOG(LOG_WARN) << "stopAsync called!\n\n";
-  // FIXME: setting ST_ANTFS_LAST might not be enough for stopping immediately,
+  // NOTE:  setting ST_ANTFS_LAST might not be enough for stopping immediately,
   //        as other thread might be
   //        sleeping in a listener, and we stop only when that returns.
   if(m_antMessenger) m_antMessenger->interruptWait(); // FIXME locking needed to access m_antMessenger!!!
@@ -258,13 +267,15 @@ AntFr310XT::th_eventLoop()
     else
     {
       changeState(ST_ANTFS_BAD);
-      sleepms(1000);
+      sleepms(ANTPM_DELAY_MS_UNHANDLED);
     }
   }
+  lprintf(LOG_DBG2, "~%s\n", __FUNCTION__);
   return 0;
 }
 
 
+/// Return true if event was handled according to the State Machine, false otherwise.
 bool
 AntFr310XT::handleEvents()
 {
@@ -325,7 +336,7 @@ AntFr310XT::handleEvents()
   // new state machine
   if(state==ST_ANTFS_RESTART)
   {
-    if(++m_restartCount==10)
+    if(++m_restartCount==ANTPM_MAX_RESTARTS)
     {
       LOG(LOG_RAW) << "\n\nTried " << m_restartCount << " times, and couldn't communicate with ANT device!\n"
                    << "Please try again running the downloader.\n"
@@ -472,7 +483,7 @@ AntFr310XT::handleEvents()
     // channel status <>
     CHECK_RETURN_FALSE_LOG_OK_DBG2(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
 
-    if(clientDevName=="Forerunner 405")
+    if(clientDevName=="Forerunner 405" || clientDevName=="Forerunner 410" || isAntpm405Override())
       changeStateSafe(ST_ANTFS_GINTF_DL_CAPS);
     else if(mode==MD_DOWNLOAD_ALL || mode==MD_DIRECTORY_LISTING)
       changeStateSafe(ST_ANTFS_DL_DIRECTORY);
@@ -697,12 +708,50 @@ AntFr310XT::handleEvents()
     //R   1.546 MESG_BROADCAST_DATA_ID chan=0x00 ANTFS_BEACON(0x43) Beacon=1Hz, pairing=disabled, upload=disabled, dataAvail=no, State=Transport, Auth=PasskeyAndPairingOnly
     //S   2.477 MESG_BURST_DATA_ID chan=0x00, seq=1, last=yes fe00000000000000 ........
 
-    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(0xfe00000000000000)));
+    CHECK_RETURN_FALSE(createDownloadFolder());
 
-    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(0x06000200ff000000)));
+    vector<uint8_t> data;
+    uint64_t code = 0xfe00000000000000;
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(code), data));
+    {AntFsFile file0; file0.bytes=data; file0.saveToFile((folder+toString(code, 16, '0')+".bin").c_str());}
+
+    code = 0x06000200ff000000;
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(code), data));
+    {AntFsFile file0; file0.bytes=data; file0.saveToFile((folder+toString(code, 16, '0')+".bin").c_str());}
 
     // 06000200f8000000
-    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(0x06000200f8000000)));
+    code = 0x06000200f8000000;
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(code), data));
+    {AntFsFile file0; file0.bytes=data; file0.saveToFile((folder+toString(code, 16, '0')+".bin").c_str());}
+
+    // 0x060002001b000000 pid=0x001b=27 L001_Pid_Records
+    code = 0x060002001b000000;
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(code), data));
+    {AntFsFile file0; file0.bytes=data; file0.saveToFile((folder+toString(code, 16, '0')+".bin").c_str());}
+
+    // 0x06000200de030000 pid=0x03de=990 L001_Pid_Run
+    code = 0x06000200de030000;
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(code), data));
+    {AntFsFile file0; file0.bytes=data; file0.saveToFile((folder+toString(code, 16, '0')+".bin").c_str());}
+
+
+    // 0x0600020095000000 pid=0x0095=149 L001_Pid_Lap
+    code = 0x0600020095000000;
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(code), data));
+    {AntFsFile file0; file0.bytes=data; file0.saveToFile((folder+toString(code, 16, '0')+".bin").c_str());}
+
+
+    // 0x0600020063000000 pid=0x0063=99 L001_Pid_Trk_Hdr
+    code = 0x0600020063000000;
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(code), data));
+    {AntFsFile file0; file0.bytes=data; file0.saveToFile((folder+toString(code, 16, '0')+".bin").c_str());}
+
+
+    // 0x06000200e6050000 pid=0x05e6=1510 ????_Pid_Unknown
+    code = 0x06000200e6050000;
+    CHECK_RETURN_FALSE_LOG_OK(m_antMessenger->ANTFS_Direct(chan, SwapDWord(code), data));
+    {AntFsFile file0; file0.bytes=data; file0.saveToFile((folder+toString(code, 16, '0')+".bin").c_str());}
+
 
     // just exit
     changeStateSafe(ST_ANTFS_LAST);
@@ -807,6 +856,9 @@ AntFr310XT::guessDeviceType(const ushort devNum, const uchar devId, const uchar 
     return true;
   }
 
+  // 410
+  // devNum=0xdbfd devId=0x01 transType=0x05
+  // Beacon=1Hz
 
   return false;
 }

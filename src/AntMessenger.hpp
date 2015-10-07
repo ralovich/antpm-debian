@@ -109,7 +109,7 @@ struct AntMessenger_Recevier;
 class AntMessenger
 {
 public:
-  AntMessenger(bool eventLoopInBgTh = true);
+  AntMessenger();
   ~AntMessenger();
   void setHandler(Serial* io){m_io=io;}
   void setCallback(AntCallback* cb){m_cb=cb;}
@@ -143,7 +143,7 @@ public:
   bool ANTFS_Erase(const uchar chan, const ushort file);
   bool ANTFS_RequestClientDeviceSerialNumber(const uchar chan, const uint hostSN, uint& sn, std::string& devName);
 
-  bool ANTFS_Direct(const uchar chan, const uint64_t code);
+  bool ANTFS_Direct(const uchar chan, const uint64_t code, std::vector<uint8_t> &bytes);
 
   void eventLoop();
   void kill();

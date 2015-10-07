@@ -27,6 +27,7 @@
 #include "Log.hpp"
 
 #include <boost/program_options.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 namespace po = boost::program_options;
 using namespace std;
@@ -66,9 +67,12 @@ main(int argc, char** argv)
   po::positional_options_description pd;
   pd.add("input-file", 1);
   po::options_description desc("Allowed options");
-  desc.add_options()
+  po::variables_map vm;
+  try
+  {
+    desc.add_options()
     ("help,h",                                                       "produce help message")
-    ("op,operation", po::value<string>(&op)->default_value("parse"), "possible modes of operation: parse|dump|usbmon|filter|count")
+    ("op,O", po::value<string>(&op)->default_value("parse"), "possible modes of operation: parse|dump|usbmon|filter|count")
     //("d", po::value<bool>(&dump)->zero_tokens(), "diffable byte dumps + decoded strings")
     //("u", po::value<bool>(&usbmon)->zero_tokens(), "generate pseudo usbmon output")
     //("f", po::value<bool>(&filter)->zero_tokens(), "just filter ANT messages from usbmon stream")
@@ -76,9 +80,6 @@ main(int argc, char** argv)
     ("version,V",                                               "Print version information")
     ;
 
-  po::variables_map vm;
-  try
-  {
     //po::parsed_options parsed = po::parse_command_line(argc, argv, desc);
     po::parsed_options parsed = po::command_line_parser(argc, argv).options(desc).positional(pd).run();
     po::store(parsed, vm);
@@ -90,6 +91,18 @@ main(int argc, char** argv)
     cerr << desc << "\n";
     return EXIT_FAILURE;
   }
+  catch(boost::exception& e)
+  {
+    cerr << boost::diagnostic_information(e) << std::endl;
+    return EXIT_FAILURE;
+  }
+  catch(std::exception& ex)
+  {
+    cerr << ex.what() << "\n";
+    cerr << desc << "\n";
+    return EXIT_FAILURE;
+  }
+
 
   if(vm.count("version") || vm.count("V"))
   {

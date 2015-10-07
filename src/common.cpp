@@ -137,7 +137,18 @@ getDateString()
   const boost::posix_time::ptime now=boost::posix_time::second_clock::local_time();
   boost::posix_time::time_facet*const f=new boost::posix_time::time_facet("%Y_%m_%d_%H_%M_%S");
   msg.imbue(std::locale(msg.getloc(),f));
-  msg << now;
+  try
+  {
+    msg << now;
+  }
+  catch(boost::exception &e)
+  {
+    std::cerr << boost::diagnostic_information(e) << std::endl;
+  }
+  catch(std::exception& e)
+  {
+    std::cerr << e.what() << std::endl;
+  }
   return msg.str();
 }
 
@@ -179,7 +190,7 @@ getConfigFolder()
 
 
 void
-readUInt64(const uint clientSN, uint64_t& pairedKey)
+readUInt64(const unsigned int clientSN, uint64_t& pairedKey)
 {
   std::stringstream ss;
   ss << getConfigFolder() << "libantpmauth_" << clientSN;
@@ -194,7 +205,7 @@ readUInt64(const uint clientSN, uint64_t& pairedKey)
 }
 
 void
-writeUInt64(const uint clientSN, const uint64_t& pairedKey)
+writeUInt64(const unsigned int clientSN, const uint64_t& pairedKey)
 {
   std::stringstream ss;
   ss << getConfigFolder() << "libantpmauth_" << clientSN;
@@ -329,6 +340,16 @@ getVersionString()
 }
 
 
+bool
+isAntpm405Override()
+{
+  char* ANTPM_405 = getenv("ANTPM_405");
+  if(ANTPM_405!=NULL && strncmp("1",ANTPM_405,1)==0)
+  {
+    return true;
+  }
+  return false;
+}
 
 
 
@@ -360,7 +381,6 @@ template const std::string toStringDec(const int& val, const int width, const ch
 template const std::string toStringDec(const unsigned long& val, const int width, const char fill);
 template const std::string toStringDec(const double& val, const int width, const char fill);
 template const std::string toStringDec(const unsigned int& val, const int width, const char fill);
-
 
 
 #ifdef _WIN64

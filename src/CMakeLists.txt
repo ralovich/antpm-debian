@@ -10,7 +10,11 @@ PROJECT(antpm C CXX)
 OPTION(USE_COVERAGE "use gcov" FALSE)
 OPTION(USE_BOOST_TEST "use boost::test" FALSE)
 OPTION(USE_BOOST_STATIC_LINK "link statically against boost" TRUE)
-
+IF(MSVC)
+  OPTION(USE_GANT "build gant" FALSE)
+ELSE()
+  OPTION(USE_GANT "build gant" TRUE)
+ENDIF()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
@@ -35,6 +39,7 @@ IF(MSVC)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
   ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0500)
 ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
@@ -42,7 +47,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
   SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -g")
   SET(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS_RELEASE} -O2")
   set(CMAKE_CXX_FLAGS_DEBUG          "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -ggdb3")
-  set(CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -pedantic -Wextra -Wall")
+  set(CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -std=c99 -pedantic -Wextra -Wall")
   set(CMAKE_C_FLAGS_DEBUG            "${CMAKE_C_FLAGS_DEBUG} -g3 -ggdb3")
 
   IF(USE_COVERAGE)
@@ -94,7 +99,6 @@ SET(SRCS
   AntMessenger.hpp AntMessenger.cpp
   SerialUsb.hpp SerialUsb.cpp
   AntFr310XT.hpp AntFr310XT.cpp
-  AntFr405.hpp AntFr405.cpp
   lqueue.hpp
   Serial.hpp Serial.cpp
 
@@ -116,6 +120,7 @@ IF(NOT WIN32)
     SerialTty.hpp SerialTty.cpp
 	  )
   SET(Boost_THREAD_LIBRARY "${Boost_THREAD_LIBRARY};pthread")
+  SET(MY_ANTPM_LIBRARIES "stdc++")
 ENDIF()
 
 
@@ -128,7 +133,7 @@ TARGET_LINK_LIBRARIES(antpm
   ${Boost_THREAD_LIBRARY}
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_FILESYSTEM_LIBRARY}
-  stdc++
+  ${MY_ANTPM_LIBRARIES}
 )
 
 ADD_EXECUTABLE(antpm-usbmon2ant
@@ -162,7 +167,9 @@ INSTALL(TARGETS antpm-fit2gpx RUNTIME DESTINATION bin)
 
 add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 
-ADD_SUBDIRECTORY(gant)
+IF(USE_GANT)
+  ADD_SUBDIRECTORY(gant)
+ENDIF()
 
 # set(CPACK_PACKAGE_VERSION_MAJOR "1")
 # set(CPACK_PACKAGE_VERSION_MINOR "0")

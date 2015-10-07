@@ -25,9 +25,6 @@
 #include <list>
 
 
-
-
-
 template <typename DataType>
 class lqueue2
 {
@@ -85,7 +82,7 @@ protected:
 
 
 
-// implements push consumer
+/// implements push consumer
 template < class DataType>
 class lqueue3 : public lqueue2<DataType>
 {
@@ -94,33 +91,29 @@ public:
   typedef boost::function<bool (std::vector<DataType>&)> Listener2;
   typedef lqueue2<DataType>                              Super;
 
-  struct ListenerProc
-  {
-    void operator() (lqueue3* This)
-    {
-      This->eventLoop();
-    }
-  };
-
-
-  lqueue3(bool eventLoopInBgTh = true)
+  lqueue3()
     : stop(false)
+    , started(false)
+    , stopped(false)
   {
-    if(eventLoopInBgTh)
-      th_listener.reset( new boost::thread(lp, this) );
   }
 
   ~lqueue3()
   {
-    stop = true;
-    if(th_listener.get())
-      th_listener->join();
+    kill();
   }
 
   void
   kill()
   {
     stop = true;
+    if(started)
+    {
+      while(!stopped)
+      {
+        boost::thread::yield();
+      }
+    }
   }
 
   void
@@ -130,6 +123,167 @@ public:
   }
 
 public:
+  void eventLoop()
+  {
+    assert(!started);
+    started = true;
+    while(!stop)
+    {
+      boost::unique_lock<boost::mutex> lock(Super::m_mtx);
+
+      boost::posix_time::time_duration td = boost::posix_time::milliseconds(2000);
+      if(!Super::m_pushEvent.timed_wait(lock, td)) // will automatically and atomically unlock mutex while it waits
+      {
+        //std::cout << "no event before timeout\n";
+        continue;
+      }
+
+      if(Super::m_q.empty())
+        continue; // spurious wakeup
+      size_t s = Super::m_q.size();
+      std::vector<DataType> v(s);
+      for(size_t i = 0; i < s; i++)
+      {
+        v[i] = Super::m_q.front();
+        Super::m_q.pop_front();
+      }
+      if(mCallback)
+        /*bool rv =*/ mCallback(v);
+    }
+    stopped = true;
+  }
+
+protected:
+  volatile bool stop;
+  volatile bool started;
+  volatile bool stopped;
+  Listener2 mCallback;
+};
+
+
+/// implements poll-able pop consumer
+template < class DataType>
+class lqueue4 : public lqueue2<DataType>
+{
+public:
+  typedef lqueue2<DataType>                 Super;
+
+  template < class Cmp >
+  bool
+  tryFindPop(DataType& needle, Cmp cmp)
+  {
+    boost::mutex::scoped_lock lock(Super::m_mtx);
+    typename Super::DataList::iterator i;
+    for(i = Super::m_q.begin(); i != Super::m_q.end(); i++)
+    {
+      if(cmp(needle, *i))
+        break;
+    }
+    if(i==Super::m_q.end())
+      return false;
+    needle = *i; // copy
+    Super::m_q.erase(i);
+    return true;
+  }
+  bool
+  pop(DataType& data, const size_t timeout = 0)
+  {
+    boost::mutex::scoped_lock lock(Super::m_mtx);
+
+    /// if queue empty, wait until timeout if there was anything pushed
+    if(Super::m_q.empty() && timeout > 0)
+    {
+      boost::posix_time::time_duration td = boost::posix_time::milliseconds(timeout);
+      if(!Super::m_pushEvent.timed_wait(lock, td))
+        return false;
+    }
+    if(Super::m_q.empty()) // spurious wakeup
+      return false;
+
+    data = Super::m_q.front();
+    Super::m_q.pop_front();
+    return true;
+  }
+
+  bool
+  popArray(DataType* dst, const size_t sizeBytes, size_t& bytesRead, const size_t timeout = 0)
+  {
+    if(!dst)
+      return false;
+
+    boost::unique_lock<boost::mutex> lock(Super::m_mtx);
+
+    /// if queue empty, wait until timeout if there was anything pushed
+    if(Super::m_q.empty() && timeout > 0)
+    {
+      boost::posix_time::time_duration td = boost::posix_time::milliseconds(timeout);
+      if(!Super::m_pushEvent.timed_wait(lock, td))
+      {
+        bytesRead = 0;
+        return false;
+      }
+    }
+    if(Super::m_q.empty()) // spurious wakeup
+      return false;
+
+    size_t s = Super::m_q.size();
+    s = std::min(s, sizeBytes);
+    for(size_t i = 0; i < s; i++)
+    {
+      *(dst+i) = Super::m_q.front();
+      Super::m_q.pop_front();
+    }
+    bytesRead = s;
+
+    return true;
+  }
+};
+
+
+/// implements push consumer, with event dispatch in background thread
+template < class DataType>
+class lqueue3_bg : public lqueue2<DataType>
+{
+public:
+  typedef boost::function<bool (DataType&)>     Listener;
+  typedef boost::function<bool (std::vector<DataType>&)> Listener2;
+  typedef lqueue2<DataType>                              Super;
+
+  struct ListenerProc
+  {
+    void operator() (lqueue3_bg* This)
+    {
+      This->eventLoop();
+    }
+  };
+
+
+  lqueue3_bg()
+    : stop(false)
+  {
+    th_listener.reset( new boost::thread(lp, this) );
+  }
+
+  ~lqueue3_bg()
+  {
+    kill();
+  }
+
+  void
+  kill()
+  {
+    stop = true;
+    if(th_listener.get())
+      th_listener->join();
+  }
+
+  void
+  setOnDataArrivedCallback(Listener2 l)
+  {
+    mCallback = l;
+  }
+
+protected:
   void eventLoop()
   {
     while(!stop)
@@ -163,82 +317,3 @@ protected:
   volatile bool stop;
   Listener2 mCallback;
 };
-
-
-// implements poll-able pop consumer
-template < class DataType>
-class lqueue4 : public lqueue2<DataType>
-{
-public:
-  typedef lqueue2<DataType>                 Super;
-
-  template < class Cmp >
-  bool
-  tryFindPop(DataType& needle, Cmp cmp)
-  {
-    boost::mutex::scoped_lock lock(Super::m_mtx);
-    typename Super::DataList::iterator i;
-    for(i = Super::m_q.begin(); i != Super::m_q.end(); i++)
-    {
-      if(cmp(needle, *i))
-        break;
-    }
-    if(i==Super::m_q.end())
-      return false;
-    needle = *i; // copy
-    Super::m_q.erase(i);
-    return true;
-  }
-  bool
-  pop(DataType& data, const size_t timeout = 0)
-  {
-    boost::mutex::scoped_lock lock(Super::m_mtx);
-
-    /// if queue empty, wait untile timeout if there was anything pushed
-    if(Super::m_q.empty() && timeout > 0)
-    {
-      boost::posix_time::time_duration td = boost::posix_time::milliseconds(timeout);
-      if(!Super::m_pushEvent.timed_wait(lock, td))
-        return false;
-    }
-    assert(!Super::m_q.empty());
-
-    data = Super::m_q.front();
-    Super::m_q.pop_front();
-    return true;
-  }
-
-  bool
-  popArray(DataType* dst, const size_t sizeBytes, size_t& bytesRead, const size_t timeout = 0)
-  {
-    if(!dst)
-      return false;
-
-    boost::unique_lock<boost::mutex> lock(Super::m_mtx);
-
-    /// if queue empty, wait until timeout if there was anything pushed
-    if(Super::m_q.empty() && timeout > 0)
-    {
-      boost::posix_time::time_duration td = boost::posix_time::milliseconds(timeout);
-      if(!Super::m_pushEvent.timed_wait(lock, td))
-      {
-        bytesRead = 0;
-        return false;
-      }
-    }
-    assert(!Super::m_q.empty());
-
-    size_t s = Super::m_q.size();
-    s = std::min(s, sizeBytes);
-    for(size_t i = 0; i < s; i++)
-    {
-      *(dst+i) = Super::m_q.front();
-      Super::m_q.pop_front();
-    }
-    bytesRead = s;
-
-    return true;
-  }
-};
-
-
