@@ -1,6 +1,6 @@
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -64,7 +64,7 @@
+@@ -69,7 +69,7 @@
  ENDIF()
  set(Boost_USE_MULTITHREADED      ON)
  set(Boost_USE_STATIC_RUNTIME    OFF)
@@ -9,3 +9,11 @@
  IF(NOT Boost_FOUND)
    MESSAGE(FATAL_ERROR "Boost not found!")
  ENDIF()
+@@ -131,6 +131,7 @@
+   ${Boost_DATE_TIME_LIBRARY}
+   ${LIBUSB_LIBRARIES}
+   ${Boost_THREAD_LIBRARY}
++  ${Boost_ATOMIC_LIBRARY}
+   ${Boost_SYSTEM_LIBRARY}
+   ${Boost_FILESYSTEM_LIBRARY}
+   ${MY_ANTPM_LIBRARIES}
