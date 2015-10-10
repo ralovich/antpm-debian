@@ -4,7 +4,7 @@ Section: utils
 Maintainer: Debian running development group <pkg-running-devel@lists.alioth.debian.org>
 Uploaders: Christian Perrier <bubulle@debian.org> 
 Build-Depends: debhelper (>= 9~), devscripts (>= 2.10), g++ (>= 4.4) | clang (>= 3.0), libboost-dev (>= 1.41) | libboost1.41-dev, cmake (>= 2.8), libusb-dev, pkg-config (>= 0.25), libxml2-dev,libboost-thread-dev,libboost-filesystem-dev,libboost-system-dev,libboost-date-time-dev,libboost-program-options-dev,libboost-test-dev,libboost-atomic-dev
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Vcs-Git: git://git.debian.org/git/pkg-running/antpm.git
 Vcs-Browser: http://git.debian.org/?p=pkg-running/antpm.git;a=summary
 
