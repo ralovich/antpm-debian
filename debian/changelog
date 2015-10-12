@@ -1,3 +1,13 @@
+antpm (1.17-2) unstable; urgency=low
+
+  * Team upload
+
+  [ Samuel Thibault ]
+  * antpm: Fix nbcpu computation on non-linux
+    Closes: #801578
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Mon, 12 Oct 2015 20:54:34 +0200
+
 antpm (1.17-1) unstable; urgency=low
 
   * Team upload
