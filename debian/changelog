@@ -1,3 +1,15 @@
+antpm (1.18-1) unstable; urgency=low
+
+  * Team upload
+
+  [ RALOVICH, Kristof ]
+  * New upstream version 1.18
+  * update to Standards-Version 3.9.7
+  * upgrade to libusb-1.0-0-dev package dependency
+    Closes: #810395
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Sat, 12 Mar 2016 23:06:34 +0100
+
 antpm (1.17-2) unstable; urgency=low
 
   * Team upload
