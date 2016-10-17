@@ -6,6 +6,7 @@
 # endif
 
 export DH_VERBOSE=1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 NUMCPUS=$(shell grep -c '^processor' /proc/cpuinfo)
 ifeq ($(NUMCPUS),0)
