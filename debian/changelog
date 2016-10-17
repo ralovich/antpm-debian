@@ -1,3 +1,14 @@
+antpm (1.18-2) unstable; urgency=low
+
+  * Team upload
+
+  [ RALOVICH, Kristof ]
+  * cmake: don't static link boost
+    Closes: #837399
+  * debian: enable hardened build
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Mon, 17 Oct 2016 19:34:00 +0200
+
 antpm (1.18-1) unstable; urgency=low
 
   * Team upload
