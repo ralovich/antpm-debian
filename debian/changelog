@@ -1,3 +1,12 @@
+antpm (1.19-1) unstable; urgency=medium
+
+  * Team upload.
+
+  [ RALOVICH, Kristof ]
+  * New upstream version 1.19.
+
+ -- Kristof Ralovich <ralovich@in.tum.de>  Fri, 24 Mar 2017 21:03:30 +0100
+
 antpm (1.18-2) unstable; urgency=low
 
   * Team upload
