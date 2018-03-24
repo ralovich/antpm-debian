@@ -1,3 +1,9 @@
+antpm (1.19-5) unstable; urgency=low
+
+  * Remove myself from Uploaders
+
+ -- Christian Perrier <bubulle@debian.org>  Sat, 24 Mar 2018 07:32:30 +0100
+
 antpm (1.19-4) unstable; urgency=medium
 
   * Team upload.
