@@ -1,4 +1,4 @@
-antpm (1.19-6) UNRELEASED; urgency=medium
+antpm (1.19-6) unstable; urgency=medium
 
   * QA upload.
   * Set Maintainer to Debian QA Group.  (See: #918906) (Closes: #899963)
@@ -6,7 +6,7 @@ antpm (1.19-6) UNRELEASED; urgency=medium
   * Switch to debhelper-compat (= 12).
   * Migrate GIT repository to salsa.debian.org.
 
- -- Andreas Beckmann <anbe@debian.org>  Sun, 13 Jan 2019 13:00:11 +0100
+ -- Andreas Beckmann <anbe@debian.org>  Sun, 13 Jan 2019 13:43:50 +0100
 
 antpm (1.19-5) unstable; urgency=low
 
