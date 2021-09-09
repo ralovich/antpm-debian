@@ -8,7 +8,7 @@ Build-Depends:
  devscripts,
  libboost-atomic-dev,
  libboost-date-time-dev,
- libboost-dev (>= 1.41),
+ libboost-dev,
  libboost-exception-dev,
  libboost-filesystem-dev,
  libboost-program-options-dev,
