@@ -1,3 +1,16 @@
+antpm (1.19-7) UNRELEASED; urgency=medium
+
+  * QA upload.
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since stretch.
+    + Build-Depends: Drop versioned constraint on cmake, devscripts and
+      pkg-config.
+  * Remove constraints unnecessary since buster.
+    + Build-Depends: Drop versioned constraint on libboost-dev.
+
+ -- Andreas Beckmann <anbe@debian.org>  Mon, 04 Oct 2021 15:05:47 +0200
+
 antpm (1.19-6) unstable; urgency=medium
 
   * QA upload.
