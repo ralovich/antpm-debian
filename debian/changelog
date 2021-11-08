@@ -1,10 +1,11 @@
 antpm (1.20-1) UNRELEASED; urgency=medium
 
-  * QA upload.
-
   [ RALOVICH, Kristof ]
   * new upstream release
   * fixes segfault and closes LP: #1805997
+
+  [ Andreas Beckmann ]
+  * Add debian/upstream/metadata.
 
   [ Debian Janitor ]
   * Remove constraints unnecessary since stretch.
