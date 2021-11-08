@@ -1,7 +1,7 @@
 Source: antpm
 Priority: optional
 Section: utils
-Maintainer: Debian QA Group <packages@qa.debian.org>
+Maintainer: Kristóf Ralovich <tade60@freemail.hu>
 Build-Depends:
  debhelper-compat (= 12),
  cmake,
