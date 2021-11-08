@@ -1,8 +1,10 @@
-antpm (1.20-1) UNRELEASED; urgency=medium
+antpm (1.20-1) unstable; urgency=medium
 
   [ RALOVICH, Kristof ]
   * new upstream release
   * fixes segfault and closes LP: #1805997
+  * adopt package (Closes: #918906)
+  * add watch file
 
   [ Andreas Beckmann ]
   * Add debian/upstream/metadata.
@@ -15,7 +17,7 @@ antpm (1.20-1) UNRELEASED; urgency=medium
   * Remove constraints unnecessary since buster.
     + Build-Depends: Drop versioned constraint on libboost-dev.
 
- -- Kristof Ralovich <tade60@freemail.hu>  Sat, 06 Nov 2021 14:33:19 +0100
+ -- Kristóf Ralovich <tade60@freemail.hu>  Mon, 08 Nov 2021 11:59:37 +0100
 
 antpm (1.19-6) unstable; urgency=medium
 
