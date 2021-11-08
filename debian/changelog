@@ -6,6 +6,7 @@ antpm (1.20-1) UNRELEASED; urgency=medium
 
   [ Andreas Beckmann ]
   * Add debian/upstream/metadata.
+  * Set Rules-Requires-Root: no.
 
   [ Debian Janitor ]
   * Remove constraints unnecessary since stretch.
