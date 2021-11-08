@@ -21,6 +21,7 @@ Build-Depends:
 Standards-Version: 3.9.8
 Vcs-Git: https://salsa.debian.org/debian/antpm.git
 Vcs-Browser: https://salsa.debian.org/debian/antpm
+Homepage: https://github.com/ralovich/antpm
 
 Package: antpm
 Architecture: any
