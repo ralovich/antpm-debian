@@ -25,8 +25,7 @@ LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
 	dh $@
 
 override_dh_auto_configure:
-	mkdir cmake-build
-	cd cmake-build && cmake ../src -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS} $(CFLAGS)" -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} $(CXXFLAGS)"
+	dh_auto_configure --sourcedirectory=src --builddirectory=cmake-build -- -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="${CMAKE_C_FLAGS} $(CFLAGS)" -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} $(CXXFLAGS)"
 
 override_dh_auto_build:
 	cd cmake-build && $(MAKE) -j$(NUMCPUS)
