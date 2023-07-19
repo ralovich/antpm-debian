@@ -1,3 +1,11 @@
+antpm (1.21-1) unstable; urgency=medium
+
+  [ RALOVICH, Kristof ]
+  * new upstream release, fixes gcc 13 build (Closes: #1037577)
+  * linking against boost statically
+
+ -- Kristóf Ralovich <tade60@freemail.hu>  Wed, 19 Jul 2023 15:47:12 +0200
+
 antpm (1.20-1.1) UNRELEASED; urgency=medium
 
   * Non-maintainer upload.
