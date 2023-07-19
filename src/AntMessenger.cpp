@@ -759,12 +759,14 @@ AntMessenger::ANTFS_RequestClientDeviceSerialNumber(const uchar chan, const uint
   cmd.detail.authenticate.authStrLen = 0;
   cmd.detail.authenticate.sn = hostSN;
 
+  CHECK_RETURN_FALSE_LOG_OK_DBG2(ANT_SendAcknowledgedData(chan, reinterpret_cast<uchar*>(&cmd), 2000));
+
+  {
   AntChannel& pc = *chs[chan].get();
   AntBurstListener bl(pc);
   //pc.addMsgListener(&bl);
 
 
-  CHECK_RETURN_FALSE_LOG_OK_DBG2(ANT_SendAcknowledgedData(chan, reinterpret_cast<uchar*>(&cmd), 2000));
 
   std::vector<uchar> burstData;
   /*bool rv =*/ bl.collectBurst(burstData, 5000);
@@ -777,14 +779,23 @@ AntMessenger::ANTFS_RequestClientDeviceSerialNumber(const uchar chan, const uint
   //
   //CHECK_RETURN_FALSE_LOG_OK(waitForBurst(chan, burstData, 30000));
   LOG_VAR_DBG2(burstData.size());
-  CHECK_RETURN_FALSE_LOG_OK_DBG2(burstData.size()==4*8);
+  CHECK_RETURN_FALSE_LOG_OK_DBG2(burstData.size()==4*8 || burstData.size()==2*8);
 
   const M_ANTFS_Response* cmdResp(reinterpret_cast<const M_ANTFS_Response*>(&burstData[8]));
   sn = cmdResp->detail.authenticateResponse.sn;
   uchar lenDevName=cmdResp->detail.authenticateResponse.authStrLen; // 16 for 310XT, 14 for 410
-  CHECK_RETURN_FALSE_LOG_OK_DBG2(lenDevName>0);
+  LOG_VAR_DBG2(static_cast<int>(lenDevName));
+  if(burstData.size()==32)
+  {
+    CHECK_RETURN_FALSE_LOG_OK_DBG2(lenDevName>0);
 
-  devName = std::string(reinterpret_cast<const char*>(&burstData[16]), lenDevName);
+    devName = std::string(reinterpret_cast<const char*>(&burstData[16]), lenDevName);
+  }
+  else
+  {
+    devName = "Forerunner 405";
+  }
+  }
 
   logger() << "devName = \"" << devName << "\"\n";
 
@@ -917,7 +928,7 @@ AntMessenger::sendCommand(AntMessage &m, const size_t timeout_ms)
   }
   }
 
-  sanityCheck();
+  sanityCheck(__FUNCTION__);
 
   return true;
 }
@@ -952,7 +963,7 @@ AntMessenger::sendRequest(uchar reqMsgId, uchar chan, AntMessage *response, cons
 
   //pc.rmMsgListener(&rl);
   }
-  sanityCheck();
+  sanityCheck(__FUNCTION__);
 
   return rv;
 }
@@ -1030,7 +1041,7 @@ AntMessenger::sendAckData(const uchar chan, const uchar data[8], const size_t ti
     }
     rv = rv && found;
   }
-  sanityCheck();
+  sanityCheck(__FUNCTION__);
 
   return rv;
 }
@@ -1132,11 +1143,11 @@ AntMessenger::onMessage(std::vector<AntMessage> v)
 }
 
 
-void AntMessenger::sanityCheck()
+void AntMessenger::sanityCheck(const char *caller)
 {
   for(int i=0; i < ANTPM_MAX_CHANNELS; i++)
   {
-    chs[i]->sanityCheck();
+    chs[i]->sanityCheck(caller);
   }
 
 }
@@ -1169,7 +1180,7 @@ AntMessenger::waitForBurst(const uchar chan,
   }
   }
 
-  sanityCheck();
+  sanityCheck(__FUNCTION__);
 
   return true;
 }
@@ -1178,12 +1189,11 @@ AntMessenger::waitForBurst(const uchar chan,
 bool
 AntMessenger::waitForBroadcast(const uchar chan, AntMessage* reply, const size_t timeout_ms)
 {
-  const uchar first=ANTFS_BeaconId;
   bool found=false;
 
   AntChannel& pc = *chs[chan].get();
   {
-  AntBCastListener bcl(pc, first);
+  AntBCastListener bcl(pc);
   //pc.addBCastListener(&bcl);
 
   AntMessage dummy;if(!reply) reply=&dummy;
@@ -1192,11 +1202,12 @@ AntMessenger::waitForBroadcast(const uchar chan, AntMessage* reply, const size_t
   //M_ANTFS_Beacon* beacon(reinterpret_cast<M_ANTFS_Beacon*>(&reply->getPayloadRef()[1]));
   if(!found)
   {
-    lprintf(antpm::LOG_ERR, "no matching bcast before timeout\n"); fflush(stdout);
-  }
+    lprintf(antpm::LOG_ERR, "no matching bcast before timeout ch=%d\n", static_cast<int>(chan)); fflush(stdout);
   }
 
-  sanityCheck();
+  }
+
+  sanityCheck(__FUNCTION__);
   
   return found;
 }
@@ -1210,7 +1221,7 @@ AntMessenger::interruptWait()
     chs[i]->interruptWait();
   }
 
-  sanityCheck();
+  sanityCheck(__FUNCTION__);
 }
 
 

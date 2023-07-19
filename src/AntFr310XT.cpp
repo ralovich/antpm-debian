@@ -471,6 +471,7 @@ AntFr310XT::handleEvents()
   }
   else if(state == ST_ANTFS_AUTH1_PASS)
   {
+    bool is_fr405 = clientDevName=="Forerunner 405" || clientDevName=="Forerunner 410" || isAntpm405Override();
     CHECK_RETURN_FALSE_LOG_OK_DBG2(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
 
     if(!m_antMessenger->ANTFS_Authenticate(chan, hostSN, pairedKey))
@@ -484,7 +485,7 @@ AntFr310XT::handleEvents()
     // channel status <>
     CHECK_RETURN_FALSE_LOG_OK_DBG2(m_antMessenger->ANT_RequestMessage(chan, MESG_CHANNEL_STATUS_ID));
 
-    if(clientDevName=="Forerunner 405" || clientDevName=="Forerunner 410" || isAntpm405Override())
+    if(is_fr405)
       changeStateSafe(ST_ANTFS_GINTF_DL_CAPS);
     else if(mode==MD_DOWNLOAD_ALL || mode==MD_DIRECTORY_LISTING)
       changeStateSafe(ST_ANTFS_DL_DIRECTORY);
@@ -521,7 +522,8 @@ AntFr310XT::handleEvents()
     LOG_VAR(zfc.activityFiles.size());
     LOG_VAR(zfc.courseFiles.size());
     LOG_VAR(zfc.waypointsFiles.size());
-    zfc.cullFitFiles(db);
+    // zfc.cullFitFiles(db); // this culling strategy does not work well, because fit files are given new indices on the device after a download
+    zfc.cullFitFilesDate();
     LOG_VAR(zfc.activityFiles.size());
     LOG_VAR(zfc.courseFiles.size());
     LOG_VAR(zfc.waypointsFiles.size());

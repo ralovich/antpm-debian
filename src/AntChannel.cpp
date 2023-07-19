@@ -66,12 +66,20 @@ AntChannel::interruptWait()
 }
 
 void
-AntChannel::sanityCheck()
+AntChannel::sanityCheck(const char* caller)
 {
   boost::unique_lock<boost::mutex> lock(m_mtxListeners);
   if(!listeners.empty())
   {
-    lprintf(LOG_DBG3, "sanityCheck[ch=%d] found %d leftover listeners\n", static_cast<int>(chan), static_cast<int>(listeners.size()));
+    lprintf(LOG_DBG3, "sanityCheck[ch=%d] found %d leftover listeners (caller=%s)\n", static_cast<int>(chan), static_cast<int>(listeners.size()), caller);
+    for(size_t i = 0; i < listeners.size(); i++)
+    {
+      std::list<AntListenerBase*>::iterator iter = listeners.begin();
+      std::advance(iter, i);
+      AntListenerBase* listener = *iter;
+      std::string s = listener->name();
+      lprintf(LOG_DBG3, "sanityCheck[ch=%d] found i=%zu %s\n", static_cast<int>(chan), i, s.c_str());
+    }
   }
 }
 
@@ -224,7 +232,7 @@ AntBCastListener::match(AntMessage& other) const
 {
   return other.getMsgId()==MESG_BROADCAST_DATA_ID
       && other.getPayloadRef()[0]==owner.getChan()
-      && other.getPayloadRef()[1]==first;
+      && (other.getPayloadRef()[1]==ANTFS_BeaconId || other.getPayloadRef()[1]==ANTFS_CommandResponseId);
 }
 
 bool
