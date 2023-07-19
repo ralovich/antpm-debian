@@ -3,7 +3,7 @@ Priority: optional
 Section: utils
 Maintainer: Kristóf Ralovich <tade60@freemail.hu>
 Build-Depends:
- debhelper-compat (= 12),
+ debhelper-compat (= 13),
  cmake,
  devscripts,
  libboost-atomic-dev,
@@ -19,7 +19,7 @@ Build-Depends:
  libxml2-dev,
  pkg-config
 Rules-Requires-Root: no
-Standards-Version: 3.9.8
+Standards-Version: 4.6.2
 Vcs-Git: https://salsa.debian.org/debian/antpm.git
 Vcs-Browser: https://salsa.debian.org/debian/antpm
 Homepage: https://github.com/ralovich/antpm
